@@ -1,0 +1,445 @@
+classdef Bot < handle
+    properties
+        x
+        y
+        pos
+        neighbours
+        obst
+        obsts_lidar
+        sizes
+        grid_cell_dim = 1
+        dt
+        rs
+        rc
+        verts = []
+        verts_unc = []
+        verts_qt = []
+        verts_qtnosi = []
+        id
+        cell_mass
+        prev_cell_center = []
+        cell_center = []
+        steps_vert = 21
+        noise_model_std = 0.5
+        gps_noise_std = 0.5
+        P = [50 0;0 50]
+        pos_est
+        grid_map = []
+        phi_map = []
+        phi_cont
+        firstupdate = 0
+        firstupdate_qt = 0
+        nophi = true
+        phi__ = 1
+        kp = 5
+        ke = 5
+        kd = 5
+        ku = 0.1
+        ki = 1
+        robot_init = [48 9; 45 9; 42 9; 48 12; 45 12; 42 12; 45 15]
+
+        
+
+    end
+
+    methods
+        function obj = Bot(dt,size,rs,rc,id)
+            obj.dt = dt;
+            obj.sizes = size;
+            if id == 0
+                obj.pos = obj.sizes.*rand(2,1);
+            else
+                obj.pos = obj.robot_init(id,:)';
+            end
+            % obj.pos = obj.sizes.*rand(2,1);
+            obj.pos_est = obj.pos + obj.gps_noise_std.*randn(2,1);
+            obj.neighbours = [];
+            obj.rs = rs;
+            obj.rc = rc;
+            obj.id = id;
+            obj.x = sym('x');
+            obj.y = sym('y');
+            obj.grid_map = zeros(round(obj.sizes/obj.grid_cell_dim), round(obj.sizes/obj.grid_cell_dim),2);
+            obj.phi_map = obj.phi__.*ones(round(obj.sizes/obj.grid_cell_dim), round(obj.sizes/obj.grid_cell_dim));
+            
+            for i=1:round(obj.sizes/obj.grid_cell_dim)
+                for j=1:round(obj.sizes/obj.grid_cell_dim)
+                    obj.grid_map(i,j,:) = obj.grid_cell_dim*[i;j];
+                end
+            end
+            
+        end
+
+        function u= control_and_estimate(obj)
+            if obj.cell_center == obj.prev_cell_center
+                u = - obj.kp.*(obj.pos_est-obj.cell_center);
+            else
+                d_center_dt = (obj.cell_center - obj.prev_cell_center) ./ obj.dt;
+                u = - obj.kp.*(obj.pos_est-obj.cell_center) - obj.ke.*(d_center_dt./norm(d_center_dt));
+            end
+
+            if abs(obj.P(1,1)) > 20 || abs(obj.P(2,2)) > 20
+                u = [0;0];
+            end
+            obj.pos = obj.pos + u.*obj.dt;
+
+            pos_est_ = obj.pos_est + u.*obj.dt + obj.noise_model_std.*randn(2,1);
+            P_ = obj.P + obj.noise_model_std.*eye(2);
+            S = P_ + obj.gps_noise_std.*eye(2);
+            W = P_/S;
+            obj.pos_est = pos_est_ + W*((obj.pos+obj.gps_noise_std.*randn(2,1))-pos_est_);
+            obj.P = (eye(2) - W)*P_;
+        end
+
+        % function step(obj, u)
+        %     obj.pos = obj.pos + u.*obj.dt;
+        % end
+
+        
+
+
+        % function mass_centroid(obj)
+        %     %             obj.cell_mass = intpoly2(obj.verts,@(x,y) 1,obj.sizes);
+        %     %             obj.cell_center(1,1) = intpoly2(obj.verts,@(x,y) x,obj.sizes)/obj.cell_mass;
+        %     %             obj.cell_center(2,1) = intpoly2(obj.verts,@(x,y) y,obj.sizes)/obj.cell_mass;
+        %     obj.prev_cell_center = obj.cell_center;
+        %     polyg=polyshape(obj.verts_unc(1,:),obj.verts_unc(2,:));
+        %     obj.cell_mass = area(polyg);
+        %     [obj.cell_center(1,1),obj.cell_center(2,1)] = centroid(polyg);
+        % 
+        %     %             res = MC_int_2D(2*obj.rs,obj.pos,obj.verts);
+        %     %             obj.cell_mass = res(1);
+        %     %             obj.cell_center(1,1) = res(2);
+        %     %             obj.cell_center(2,1) = res(3);
+        % 
+        % end
+
+        function plot_unc(obj)
+            eigs = eig(obj.P);
+            [eig_vec,~] = eig(obj.P);
+            center=[obj.pos_est(1,1);obj.pos_est(2,1)];
+            t=-pi:0.01:pi;
+            xy = center + [sqrt(5.991*eigs(1)).*cos(t);sqrt(5.991*eigs(2)).*sin(t)];
+            xy = eig_vec*xy;
+            plot(xy(1,:),xy(2,:))
+        end
+
+        function plot_bot(obj)
+            text(obj.pos_est(1),obj.pos_est(2),string(obj.id))
+            %%plot(obj.pos(1),obj.pos(2),'.',MarkerSize=10)
+            %%plot(obj.verts(1,:),obj.verts(2,:))
+            plot([obj.verts_unc(1,:),obj.verts_unc(1,1)],[obj.verts_unc(2,:),obj.verts_unc(2,1)])
+            plot_unc(obj)
+        end
+
+
+        function vertex(obj)
+            obj.verts=[];
+            d_th = 2*pi/obj.steps_vert;
+            th = 0;
+            rs_ = obj.rs;
+            rs_step = rs_/100;
+            while th < 2*pi
+                v_cand = rs_.*[cos(th);sin(th)];
+                k = 1;
+                for i = 1:size(obj.neighbours,2)
+
+                    if norm(v_cand) <= - 0.01 + norm(obj.pos + v_cand - obj.neighbours(:,i))
+                        k = and(k,1);
+                    else
+                        k = and(k,0);
+                    end
+                end
+                if k 
+                    obj.verts(:,end+1) = obj.pos + v_cand;
+                    rs_ = obj.rs;
+                    th = th + d_th;
+                else
+                    rs_ = rs_ - rs_step;
+                end
+            end
+        end
+
+        % function radius=uncertainty(obj)
+        %     [~,l]=eig(obj.P);
+        %     %%radius = 1/2*min(l(:));
+        %     radius = sqrt(5.991*max(l(:)));
+        % end
+
+        % function obst_polar=obstacles_in_polar(obj)
+        %     if ~isempty(obj.obst)
+        %         obst_polar(1,:) = vecnorm(obj.pos-obj.obst);
+        %         tmp = atan2(obj.obst(2,:)-obj.pos(2,:),obj.obst(1,:)-obj.pos(1,:));
+        %         tmp(tmp<0) = tmp(tmp<0) + 2*pi;
+        %         obst_polar(2,:)=tmp;
+        %     else
+        %         obst_polar = [];
+        %     end
+        % end
+
+        % function res = vertex_obst(obj)
+        %     res=[];
+        %     obsts = obstacles_in_polar(obj);
+        %     th=0;
+        %     d_th = 2*pi/100;
+        %     dist_safe=uncertainty(obj);
+        %     if ~isempty(obsts)
+        %         while th < 2*pi
+        %             [v,i] = min(abs(obsts(2,:)-th));
+        %             if v < 0.3
+        %                 res(:,end+1) = obj.pos_est  + obsts(1,i).*[cos(obsts(2,i));sin(obsts(2,i))] - dist_safe.*[cos(obsts(2,i));sin(obsts(2,i))];
+        %             else
+        %                 res(:,end+1) = obj.pos_est + obj.rs.*[cos(th);sin(th)];
+        %             end
+        %             th = th + d_th;
+        %         end
+        %     end
+        % end
+        % 
+        % 
+        % function vertex_unc(obj)
+        %     %%obsts = obstacles_in_polar(obj);
+        %     obj.verts_unc=[];
+        %     d_th = 2*pi/obj.steps_vert;
+        %     th = 0;
+        %     rs_ = obj.rs;
+        %     rs_step = rs_/100;
+        %     dist_safe=uncertainty(obj);
+        %     while th < 2*pi
+        %         v_cand = rs_.*[cos(th);sin(th)];
+        %         k = 1;
+        %         for i = 1:size(obj.neighbours,2)
+        % 
+        %             if norm(v_cand) + dist_safe < norm(obj.pos_est + v_cand - obj.neighbours(:,i))
+        %                 k = and(k,1);
+        %             else
+        %                 k = and(k,0);
+        %             end
+        %         end
+        %         if k
+        %             obj.verts_unc(:,end+1) = obj.pos_est + v_cand;
+        %             rs_ = obj.rs;
+        %             th = th + d_th;
+        %         else
+        %             rs_ = rs_ - rs_step;
+        %         end
+        %     end
+        %     obsts_tmp =obj.vertex_obst;
+        %     poly1 = polyshape(obj.verts_unc(1,:),obj.verts_unc(2,:));
+        %     if size(obsts_tmp,2)>3
+        % 
+        %         poly2=polyshape(obsts_tmp(1,:),obsts_tmp(2,:));
+        %         poly1 = intersect(poly1,poly2);
+        %         obj.verts_unc = poly1.Vertices';
+        %     end
+        %     env =  polyshape([0 0 obj.sizes obj.sizes],[obj.sizes 0 0 obj.sizes]);
+        %     poly1 = intersect(poly1,env);
+        %     obj.verts_unc = poly1.Vertices';
+        % end
+
+        function polar_points=vertex_unc2(obj)
+            obj.verts_unc=[];
+            d_th = 2*pi/obj.steps_vert;
+            th = 0;
+            rs_ = obj.rs;
+            rs_step = rs_/100;
+            [~,l]=eig(obj.P);
+            dist_safe=sqrt(5.991*max(l(:)));
+            rads=[];
+            angles=[];
+            while th <= 2*pi
+                %%obj.id
+                v_cand = rs_.*[cos(th);sin(th)];
+                k = 1;
+                for i = 1:size(obj.neighbours,2)
+                    if norm(v_cand) + dist_safe <= -0.01 + norm(obj.pos_est + v_cand - obj.neighbours(:,i))
+                        k = and(k,1);
+                    else
+                        k = and(k,0);
+                    end
+                end
+                if k
+                    rads=[rads,rs_];
+                    angles=[angles,th];
+                    rs_ = obj.rs;
+                    th = th + d_th;
+                else
+                    rs_ = rs_ - rs_step;
+                    if rs_ <= 0
+                       rads=[rads,0.05];
+                       angles=[angles,th];
+                       rs_ = obj.rs;
+                       th = th +d_th;
+                    end
+                end
+            end
+            th = 0;
+            if ~isempty(obj.obsts_lidar)
+                for i=1:length(angles)
+                    candidates = find(abs(angles(i)-obj.obsts_lidar(2,:))<0.05);
+                    candidates_args = obj.obsts_lidar(2,candidates);
+                    [~,indx]=min(abs(candidates_args-th));
+                    indx=candidates(indx);
+                    if obj.obsts_lidar(1,indx) < rads(i)
+                        rads(i) = obj.obsts_lidar(1,indx);
+                    end
+                end
+            end
+            polar_points=[rads;angles];
+            obj.verts_unc = obj.pos_est + rads.*[cos(angles);sin(angles)];
+            poly1 = polyshape(obj.verts_unc(1,:),obj.verts_unc(2,:));
+            env =  polyshape([0 0 obj.sizes obj.sizes],[obj.sizes 0 0 obj.sizes]);
+            poly1 = intersect(poly1,env);
+            obj.verts_unc = poly1.Vertices';
+            
+            
+            %%obj.id
+        end
+
+
+
+        % function update_phi_cont(obj)
+        %     kd = 2;
+        %     ku = 1;
+        % 
+        %     visi_cond = condition_for_set(obj.verts_unc, obj.x, obj.y);
+        %     visibility_set = polyshape(obj.verts_unc(1,:),obj.verts_unc(2,:));
+        %     visited_set = polyshape(obj.verts_qt(1,:),obj.verts_qt(2,:)); 
+        %     QtnoSi_set = subtract(visited_set,visibility_set);
+        %     verts_QtnoSi = QtnoSi_set.Vertices';
+        % 
+        %     if isempty(verts_QtnoSi)
+        %         QtnoSi_cond = visi_cond;
+        %     else
+        %         QtnoSi_cond = condition_for_set(verts_QtnoSi, obj.x, obj.y);
+        %     end
+        % 
+        %     if obj.nophi
+        %         sigma_fun = 1-exp(-1/2*(obj.pos_est - [obj.x;obj.y])'*inv(obj.P)*(obj.pos_est - [obj.x;obj.y]));
+        % 
+        %         obj.phi_cont = piecewise(str2sym(visi_cond),sigma_fun, ...
+        %         str2sym(QtnoSi_cond),0.99*obj.phi__,obj.phi__) ;
+        % 
+        %         obj.nophi = false;
+        %     end
+        % 
+        %     phi_Si= children(obj.phi_cont,1);
+        %     phi_QtnoSi = children(obj.phi_cont,2);
+        %     obj.phi_cont = piecewise(str2sym(visi_cond),phi_Si - kd*phi_Si*obj.dt, str2sym(QtnoSi_cond),phi_QtnoSi + ku*(phi__ - phi_QtnoSi)*obj.dt,phi__);
+        % end
+        % 
+        % function update_phi_cont_2(obj)
+        %     sigma_fun = 1-exp(-1/2*(obj.pos_est - [obj.x;obj.y])'*inv(obj.P)*(obj.pos_est - [obj.x;obj.y]));
+        %     obj.phi_cont =
+        % end
+
+        % function int_mass_centroid(obj)
+        %     phi_Si = children(obj.phi_cont,1);;
+        %     f_mass = int(phi_Si,obj.x);
+        %     f_cent = int([obj.x;obj.y].*phi_Si,obj.x);
+        %     obj.cell_center = line_int(obj.verts_unc, @(x,y) 0*x,matlabFunction(f_cent))/line_int(obj.verts_unc,@(x,y) 0*x, matlabFunction(f_mass));
+        % end 
+
+        % function int_mass_centroid(obj)
+        %     phi_Si(obj.x, obj.y) = children(obj.phi_cont,1);
+        %     Tri = delaunay(obj.verts_unc(1,:), obj.verts_unc(2,:));
+        %     f_mass = mythreecorners(phi_Si, obj.verts_unc', Tri);
+        %     f_cent = mythreecorners([obj.x;obj.y].*phi_Si, obj.verts_unc', Tri);
+        %     obj.cell_center = f_cent/f_mass;
+        % end
+
+        function qt_qtnosi_update(obj)
+            visibility_set = polyshape(obj.verts_unc(1,:),obj.verts_unc(2,:));
+
+            if obj.firstupdate_qt <= 2
+                visited_set = visibility_set;
+                obj.verts_qt = visited_set.Vertices';
+                obj.firstupdate_qt = obj.firstupdate_qt + 1;
+            else
+                visited_set_prev = polyshape(obj.verts_qt(1,:),obj.verts_qt(2,:));
+                intersection = intersect(visibility_set, visited_set_prev);
+                visited_set = union(visited_set_prev,subtract(visibility_set,intersection));
+                QtnoSi_set = subtract(visited_set,visibility_set);
+                obj.verts_qt = visited_set.Vertices';
+                obj.verts_qtnosi = QtnoSi_set.Vertices';
+            end
+
+        end
+
+        function update_phi(obj)
+            
+            if obj.firstupdate <= 2
+
+                indx = inpolygon(obj.grid_map(:,:,1),obj.grid_map(:,:,2),obj.verts_unc(1,:),obj.verts_unc(2,:));
+
+                % sigma_fun = 1-exp(-1/2*(obj.pos_est - [obj.x;obj.y])'*inv(obj.P)*(obj.pos_est - [obj.x;obj.y]));
+                % phi_si(obj.x,obj.y) = sigma_fun;
+
+                % sigma_fun = obj.phi__-exp(-1/2*(obj.pos_est - [obj.x;obj.y])'*inv([obj.rs 0;0 obj.rs])*(obj.pos_est - [obj.x;obj.y]));
+                % phi_si(obj.x,obj.y) = sigma_fun;
+
+                
+
+                obj.phi_map = obj.phi_map - indx.*obj.kd.*obj.phi_map.*obj.dt;
+
+                % obj.phi_map = obj.phi_map - indx.*obj.kd.*double(phi_si(round(obj.grid_map(:,:,1)/obj.grid_cell_dim), ...
+                %     round(obj.grid_map(:,:,2)/obj.grid_cell_dim)))*obj.dt;
+
+
+                obj.phi_map = max(obj.phi_map,0);
+
+                obj.firstupdate = obj.firstupdate + 1;
+            else
+                indx = inpolygon(obj.grid_map(:,:,1),obj.grid_map(:,:,2),obj.verts_unc(1,:),obj.verts_unc(2,:));
+                indx_QtnoSi = inpolygon(obj.grid_map(:,:,1),obj.grid_map(:,:,2),obj.verts_qtnosi(1,:),obj.verts_qtnosi(2,:));
+
+
+                % sigma_fun = obj.phi__-exp(-1/2*(obj.pos_est - [obj.x;obj.y])'*inv([obj.rs 0;0 obj.rs])*(obj.pos_est - [obj.x;obj.y]));
+                % phi_si(obj.x,obj.y) = sigma_fun;
+
+                % sigma_fun = obj.phi__-obj.ki.*exp(-norm([obj.x;obj.y] - obj.cell_center)/10);
+                % phi_si(obj.x,obj.y) = sigma_fun;
+
+
+                
+
+                obj.phi_map = obj.phi_map - indx.*obj.kd.*obj.phi_map.*obj.dt;
+                obj.phi_map = obj.phi_map + indx_QtnoSi.*obj.ku.*(obj.phi__ - obj.phi_map)*obj.dt;
+
+                % obj.phi_map = obj.phi_map - indx.*obj.kd.*double(phi_si(round(obj.grid_map(:,:,1)/obj.grid_cell_dim), ...
+                %     round(obj.grid_map(:,:,2)/obj.grid_cell_dim)))*obj.dt;
+                % obj.phi_map = obj.phi_map + indx_QtnoSi.*obj.ku.*(obj.phi__ - obj.phi_map)*obj.dt;
+
+                obj.phi_map = max(obj.phi_map,0);
+            end
+        end
+
+        function int_mass_centroid(obj)
+            Tri = delaunay(obj.verts_unc(1,:), obj.verts_unc(2,:));
+            obj.cell_mass = mythreecorners(obj.phi_map, obj.verts_unc', Tri, false);
+            f_cent = mythreecorners(obj.phi_map, obj.verts_unc', Tri, true);
+            if ~isempty(obj.cell_center)
+                obj.prev_cell_center = obj.cell_center;
+                obj.cell_center = (f_cent/obj.cell_mass)';
+            else
+                obj.cell_center = (f_cent/obj.cell_mass)';
+                obj.prev_cell_center = obj.cell_center;
+            end
+            
+        end
+
+        % function update_phi(obj)
+        %     kd=2;
+        %     ku=1;
+        %     phi__ = 10; 
+        %     indx = inpolygon(obj.grid_map(:,:,1),obj.grid_map(:,:,2),obj.verts_unc(1,:),obj.verts_unc(2,:));
+        %     obj.phi_map(indx) = obj.phi_map(indx) - kd.* obj.dt;
+        %     indx1 = not(obj.phi_map==phi__);
+        %     indx =indx1-indx;
+        %     indx(indx1-indx<0)=0;
+        %     indx=logical(indx);
+        %     obj.phi_map(indx) = obj.phi_map(indx) + ku.*(phi__-obj.phi_map(indx));
+        %     obj.phi_map(obj.phi_map > phi__) = 10;
+        % end
+    end
+end

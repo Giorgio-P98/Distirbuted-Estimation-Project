@@ -1,0 +1,15 @@
+function updated_bots = update_neighbours(bots)
+for i=1:length(bots)
+    bots(i).neighbours=[];
+    for j =1:length(bots)
+        if ne(i,j)
+            if norm(bots(i).pos - bots(j).pos) <= bots(i).rc
+                bots(i).neighbours(:,end+1) = bots(j).pos_est;
+                bots(i).phi_map = bots(i).phi_map - bots(i).phi__ + bots(j).phi_map; 
+            end
+        end
+    end
+end
+updated_bots = bots;
+end
+
