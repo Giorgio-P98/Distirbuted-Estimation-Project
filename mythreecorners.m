@@ -18,14 +18,23 @@ for i = 1:p % loop through the triangles
     y2 = y(T(i ,2));
     y3 = y(T(i ,3));
     A = 0.5* abs(det ([x1 , x2 , x3; y1 , y2 , y3; 1, 1, 1])); % find area
+    % if cent
+    %     z1 = [x1, y1].*interp2(f,x1, y1); % find values at the three corners
+    %     z2 = [x2, y2].*interp2(f,x2, y2);
+    %     z3 = [x3, y3].*interp2(f,x3, y3);
+    % else
+    %     z1 = interp2(f,x1, y1); % find values at the three corners
+    %     z2 = interp2(f,x2, y2);
+    %     z3 = interp2(f,x3, y3);
+    % end
     if cent
-        z1 = [x1, y1].*interp2(f,x1, y1); % find values at the three corners
-        z2 = [x2, y2].*interp2(f,x2, y2);
-        z3 = [x3, y3].*interp2(f,x3, y3);
+        z1 = [x1, y1].*f(x1, y1); % find values at the three corners
+        z2 = [x2, y2].*f(x2, y2);
+        z3 = [x3, y3].*f(x3, y3);
     else
-        z1 = interp2(f,x1, y1); % find values at the three corners
-        z2 = interp2(f,x2, y2);
-        z3 = interp2(f,x3, y3);
+        z1 = f(x1, y1); % find values at the three corners
+        z2 = f(x2, y2);
+        z3 = f(x3, y3);
     end
     zavg = (z1 + z2 + z3 )/3; % average the values
     I = I + zavg *A; % accumulate integral

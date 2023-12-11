@@ -5,7 +5,7 @@ for i=1:length(bots)
         if ne(i,j)
             if norm(bots(i).pos - bots(j).pos) <= bots(i).rc
                 bots(i).neighbours(:,end+1) = bots(j).pos_est;
-                bots(i).phi_map = bots(i).phi_map - bots(i).phi__ + bots(j).phi_map; 
+                bots(i).mesh_map{3} = min(bots(i).mesh_map{3}, bots(j).mesh_map{3});
             end
         end
     end

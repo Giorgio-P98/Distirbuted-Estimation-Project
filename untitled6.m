@@ -10,12 +10,12 @@ corridor = 4;
 
 t=0;
 sim_t = 50;
-dt = 0.2;
-n_r = 6;
+dt = 0.1;
+n_r = 5;
 rc = 10;
 rs = rc/2.2;
 n_obs = 5;
-n_pointxm = 30;
+n_pointxm = 1000;
 sizes = 50;
 bots = Bot(0,0,0,0,0);
 obstacles = {zeros(n_obs)};
@@ -27,6 +27,7 @@ obstacles{2} = build_obst([corridor,corridor,sizes/3,sizes/3,corridor+wall_t,cor
 obstacles{3} = build_obst([sizes/3+door,2*sizes/3+wall_t,2*sizes/3+wall_t,2*sizes/3,2*sizes/3,sizes/3+door;sizes/3,sizes/3,5,5,sizes/3-wall_t,sizes/3-wall_t],n_pointxm);
 obstacles{4} = build_obst([0;sizes/3+corridor]+[0,0,2*sizes/3+wall_t,2*sizes/3+wall_t,sizes/3+wall_t + door/2,sizes/3+wall_t + door/2,2*sizes/3,2*sizes/3,wall_t,wall_t,sizes/3+wall_t - door/2,sizes/3+wall_t - door/2;5,sizes/3,sizes/3,5,5,5+wall_t,5+wall_t,sizes/3-wall_t,sizes/3-wall_t,5+wall_t,5+wall_t,5],n_pointxm);
 obstacles{5} = build_obst([-5,sizes+5,sizes+5,-5;5,5,0,0],n_pointxm);
+
 
 for i=1:length(obstacles)
     poly_obstacles{i} = polyshape(obstacles{i}(1,:),obstacles{i}(2,:));
@@ -51,9 +52,11 @@ end
 %         bots(i) = Bot(dt,sizes,rs,rc,i);
 %     end
 % end
-
+robot_init = [48 9; 45 9; 42 9; 48 12; 45 12; 42 12; 45 15];
 for i=1:n_r
      bots(i) = Bot(dt,sizes,rs,rc,i);
+     bots(i).pos = robot_init(i,:)';
+     bots(i).pos_est = bots(i).pos + bots(i).gps_noise_std.*randn(2,1);
 end
 %%
 
@@ -63,8 +66,7 @@ iterate(bots,@vertex_unc2);
 iterate(bots,@vertex);
 iterate(bots,@qt_qtnosi_update);
 iterate(bots,@update_phi)
-iterate(bots,@int_mass_centroid);
-iterate(bots,@control_and_estimate);
+iterate(bots,@mass_centroid);
 figure(1)
 hold on
 xlim([-5 sizes+5])
@@ -80,23 +82,22 @@ hold on
 xlim([-5 sizes+5])
 ylim([0 sizes+5])
 % view(3)
-C = bots(4).phi_map;
-surf(bots(4).grid_map(:,:,1), bots(4).grid_map(:,:,2), bots(4).phi_map, C)
+surf(bots(1).mesh_map{1}, bots(1).mesh_map{2}, bots(1).mesh_map{3}, bots(1).mesh_map{3})
 colorbar
 hold off
 i=0;
-pause(5)
+% pause(5)
 %%
 
 while(t<sim_t)
+    iterate(bots,@control_and_estimate);
     bots=update_neighbours(bots);
     bots=update_obstacles(obstacles,bots);
     iterate(bots,@vertex_unc2);
     iterate(bots,@vertex);
     iterate(bots,@qt_qtnosi_update);
     iterate(bots,@update_phi);
-    iterate(bots,@int_mass_centroid);
-    iterate(bots,@control_and_estimate);
+    iterate(bots,@mass_centroid);
     if mod(i,1) == 0
         figure(1)
         clf,clc,hold on
@@ -114,8 +115,7 @@ while(t<sim_t)
         xlim([-5 sizes+5])
         ylim([0 sizes+5])
         % view(3)
-        C = bots(4).phi_map;
-        surf(bots(4).grid_map(:,:,1), bots(4).grid_map(:,:,2), bots(4).phi_map, C)
+        surf(bots(1).mesh_map{1}, bots(1).mesh_map{2}, bots(1).mesh_map{3}, bots(1).mesh_map{3})
         colorbar
         drawnow
         hold off
@@ -124,5 +124,4 @@ while(t<sim_t)
     t = t+dt;
 end
 
-hmo = HeatMap(bots(4).phi_map);
 

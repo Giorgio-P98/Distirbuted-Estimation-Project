@@ -1,16 +1,21 @@
 function [obsts,scansion] = lidar_sim(obstacles,sensor_pos,rs)
 n_th = 500;
 obst=[];
-obsts=[];
-scansion=[];
+obsts = [];
+scansion = [];
+
 
 for j=1:length(obstacles)
     norms = vecnorm(sensor_pos - obstacles{j});
-    for k=1:length(norms)
-        if norms(k) <= rs
-            obst(:,end+1) = obstacles{j}(:,k);
-        end
-    end
+    indx = norms <= rs;
+    obst = [obst,obstacles{j}(:,indx)];
+    % [~,indx] = min(norms,rs);
+    % obst = [obst, obstacles{j}(:,indx)];
+    % for k=1:length(norms)
+    %     if norms(k) <= rs
+    %         obst(:,end+1) = obstacles{j}(:,k);
+    %     end
+    % end
     
 end
 
