@@ -11,9 +11,9 @@ corridor = 4;
 t=0;
 sim_t = 50;
 dt = 0.1;
-n_r = 5;
+n_r = 7;
 rc = 10;
-rs = rc/2.2;
+rs = rc/2;
 n_obs = 5;
 n_pointxm = 1000;
 sizes = 50;
@@ -63,7 +63,6 @@ end
 bots=update_neighbours(bots);
 bots=update_obstacles(obstacles,bots);
 iterate(bots,@vertex_unc2);
-iterate(bots,@vertex);
 iterate(bots,@qt_qtnosi_update);
 iterate(bots,@update_phi)
 iterate(bots,@mass_centroid);
@@ -94,7 +93,6 @@ while(t<sim_t)
     bots=update_neighbours(bots);
     bots=update_obstacles(obstacles,bots);
     iterate(bots,@vertex_unc2);
-    iterate(bots,@vertex);
     iterate(bots,@qt_qtnosi_update);
     iterate(bots,@update_phi);
     iterate(bots,@mass_centroid);
@@ -107,6 +105,7 @@ while(t<sim_t)
         for j=1:length(obstacles)
             plot(poly_obstacles{j},'FaceColor','black')
         end
+        text(0,sizes+2,"sim time: "+string(t)+" [s]",'Color','white')
         drawnow
         hold off
 
@@ -120,8 +119,13 @@ while(t<sim_t)
         drawnow
         hold off
     end
+    if mod(i,100) == 0
+        explored_plot(bots,n_r, poly_obstacles,sizes, 3)
+    end
     i = i +1;
     t = t+dt;
 end
+explored_plot(bots,n_r, poly_obstacles,sizes, 3)
+%%
 
 

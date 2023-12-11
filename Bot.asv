@@ -5,7 +5,7 @@ classdef Bot < handle
         obst
         obsts_lidar
         sizes
-        grid_size= 0.6
+        grid_size= 1
         dt
         rs
         rs_min
@@ -21,16 +21,16 @@ classdef Bot < handle
         steps_vert = 21
         noise_model_std = 0.5
         gps_noise_std = 0.5
-        P = [50 0;0 50]
+        P = [5 0;0 5]
         pos_est
         mesh_map = {}
-        firstupdate = true
+        % firstupdate = true
         firstupdate_qt = true
         phi__ = 10
         kp = 10
-        kd = 2
+        kd = 1
         ku = 0.2
-        k0 = 1.5
+        k0 = 1
         k1 = 0.2
         x
         y
@@ -52,18 +52,8 @@ classdef Bot < handle
             obj.id = id;
             obj.x = sym('x');
             obj.y = sym('y');
-            % obj.grid_map = zeros(round(obj.sizes/obj.grid_size), round(obj.sizes/obj.grid_size),2);
-            % obj.phi_map = obj.phi__.*ones(round(obj.sizes/obj.grid_size), round(obj.sizes/obj.grid_size));
-
             [X,Y] = meshgrid(0:obj.grid_size:obj.sizes+10,0:obj.grid_size:obj.sizes+10);
             obj.mesh_map = {X Y obj.phi__.*ones(size(X))};
-            
-            % for i=1:round(obj.sizes/obj.grid_size)
-            %     for j=1:round(obj.sizes/obj.grid_size)
-            %         obj.grid_map(i,j,:) = obj.grid_size*[i;j];
-            %     end
-            % end
-            
         end
 
         function u= control_and_estimate(obj)
@@ -101,14 +91,12 @@ classdef Bot < handle
 
         function plot_bot(obj)
             text(obj.pos_est(1),obj.pos_est(2),string(obj.id))
-            %%plot(obj.pos(1),obj.pos(2),'.',MarkerSize=10)
-            %%plot(obj.verts(1,:),obj.verts(2,:))
             plot([obj.verts_unc(1,:),obj.verts_unc(1,1)],[obj.verts_unc(2,:),obj.verts_unc(2,1)])
             plot_unc(obj)
         end
 
 
-        function vertex(obj)
+        % function vertex(obj)
             obj.verts=[];
             d_th = 2*pi/obj.steps_vert;
             th = 0;
@@ -213,6 +201,8 @@ classdef Bot < handle
         % end
 
         function polar_points=vertex_unc2(obj)
+            %%obj.id
+            %%obsts = obstacles_in_polar(obj);
             obj.verts_unc=[];
             d_th = 2*pi/obj.steps_vert;
             th = 0;
@@ -223,6 +213,7 @@ classdef Bot < handle
             rads=[];
             angles=[];
             while th <= 2*pi
+                %%obj.id
                 v_cand = rs_.*[cos(th);sin(th)];
                 k = 1;
                 
@@ -378,7 +369,7 @@ classdef Bot < handle
             % phi_si(obj.x,obj.y) = sigma_fun;
             % obj.mesh_map{3}(indx) = obj.mesh_map{3}(indx) - obj.kd.*double(phi_si(obj.mesh_map{1}(indx), obj.mesh_map{2}(indx)))*obj.dt;
 
-            obj.mesh_map{3}(indx_QtnoSi) = obj.mesh_map{3}(indx_QtnoSi) + obj.ku.*(0.9*obj.phi__ - obj.mesh_map{3}(indx_QtnoSi))*obj.dt;
+            obj.mesh_map{3}(indx_QtnoSi) = obj.mesh_map{3}(indx_QtnoSi) + obj.ku.*(obj.phi__ - obj.mesh_map{3}(indx_QtnoSi))*obj.dt;
             % sigma_fun = obj.phi__-obj.ki.*exp(-norm([obj.x;obj.y] - obj.cell_center)/10);
             % phi_si(obj.x,obj.y) = sigma_fun;
 
@@ -386,7 +377,7 @@ classdef Bot < handle
             %     round(obj.grid_map(:,:,2)/obj.grid_size)))*obj.dt;
             % obj.phi_map = obj.phi_map + indx_QtnoSi.*obj.ku.*(obj.phi__ - obj.phi_map)*obj.dt;
 
-            obj.mesh_map{3} = max(obj.mesh_map{3},0.1*obj.phi__);
+            obj.mesh_map{3} = max(obj.mesh_map{3},0.1);
             obj.mesh_map{3} = min(obj.mesh_map{3},obj.phi__);
             % end
         end
