@@ -4,14 +4,14 @@ classdef Bot < handle
         y
         pos
         neighbours
+        neighbours_unc = []
         obst
         obsts_lidar
         sizes
-        grid_size= 0.6
+        grid_size= 1
         dt
         rs
         rs_min
-        rc
         verts = []
         verts_unc = []
         verts_qt = []
@@ -22,9 +22,9 @@ classdef Bot < handle
         prev_cell_center = []
         cell_center = []
         steps_vert = 31
-        noise_model_std = 0.2
-        gps_noise_std = 0.2
-        P = [50 0;0 50]
+        noise_model_std = 0.5
+        gps_noise_std = 0.5
+        P = [0 0;0 0]
         pos_est
         mesh_map = {}
         firstupdate = true
@@ -36,11 +36,10 @@ classdef Bot < handle
         ku = 0.2
         k0 = 1.5
         k1 = 0.2
-        incumbrance = 0.6
     end
 
     methods
-        function obj = Bot(dt,sizee,rs,rc,bot_r, id)
+        function obj = Bot(dt,sizee,rs,bot_r, id)
             obj.dt = dt;
             obj.sizes = sizee;
             obj.pos = (obj.sizes-2).*rand(2,1);
@@ -48,7 +47,6 @@ classdef Bot < handle
             obj.neighbours = [];
             obj.bot_dim = bot_r;
             obj.rs = rs;
-            obj.rc = rc;
             obj.rs_min = 0.3*rs;
             obj.id = id;
             obj.x = sym('x');
@@ -106,7 +104,7 @@ classdef Bot < handle
             %%plot(obj.verts(1,:),obj.verts(2,:))
             plot([obj.verts_unc(1,:),obj.verts_unc(1,1)],[obj.verts_unc(2,:),obj.verts_unc(2,1)])
             plot_unc(obj)
-            plot_disk(obj.pos(1),obj.pos(2),obj.incumbrance)
+            plot_disk(obj.pos(1),obj.pos(2),obj.bot_dim);
         end
 
 
@@ -137,11 +135,11 @@ classdef Bot < handle
             end
         end
 
-        % function radius=uncertainty(obj)
-        %     [~,l]=eig(obj.P);
-        %     %%radius = 1/2*min(l(:));
-        %     radius = sqrt(5.991*max(l(:)));
-        % end
+        function radius=uncertainty(obj)
+            [~,l]=eig(obj.P);
+            %%radius = 1/2*min(l(:));
+            radius = sqrt(5.991*max(l(:)));
+        end
 
         % function obst_polar=obstacles_in_polar(obj)
         %     if ~isempty(obj.obst)
@@ -214,7 +212,7 @@ classdef Bot < handle
         %     obj.verts_unc = poly1.Vertices';
         % end
 
-                function polar_points=vertex_unc2(obj)
+        function polar_points=vertex_unc2(obj)
             %%obj.id
             %%obsts = obstacles_in_polar(obj);
             obj.verts_unc=[];
@@ -222,8 +220,7 @@ classdef Bot < handle
             th = 0;
             rs_ = obj.rs;
             rs_step = rs_/100;
-            [~,l]=eig(obj.P);
-            dist_safe = sqrt(5.991*max(l(:)));
+            dist_safe = uncertainty(obj);
             rads=[];
             angles=[];
             while th <= 2*pi
@@ -233,7 +230,7 @@ classdef Bot < handle
                 
                 for i = 1:size(obj.neighbours,2)
 
-                    if norm(v_cand) + dist_safe < norm(obj.pos_est + v_cand - obj.neighbours(:,i))
+                    if norm(v_cand) + dist_safe - obj.neighbours_unc(i) < norm(obj.pos_est + v_cand - obj.neighbours(:,i))
                         k = and(k,1);
                     else
                         k = and(k,0);
@@ -258,14 +255,14 @@ classdef Bot < handle
             end
             th = 0;
             if ~isempty(obj.obsts_lidar)
-                obj.obsts_lidar(1,:) = obj.obsts_lidar(1,:) - obj.incumbrance;
+                obj.obsts_lidar(1,:) = obj.obsts_lidar(1,:) - obj.bot_dim - dist_safe;
                 for i=1:length(angles)
                     candidates = find(abs(angles(i)-obj.obsts_lidar(2,:))<0.05);
                     candidates_args = obj.obsts_lidar(2,candidates);
                     [~,indx]=min(abs(candidates_args-th));
                     indx=candidates(indx);
                     if obj.obsts_lidar(1,indx) < rads(i)
-                        rads(i) = obj.obsts_lidar(1,indx);% - obj.incumbrance;
+                        rads(i) = obj.obsts_lidar(1,indx);% - obj.bot_dim;
                         if rads(i) <=0
                             rads(i) = 0.05;
                         end
@@ -278,24 +275,38 @@ classdef Bot < handle
             rads(n_indx_rad) = rads(n_indx_rad) + obj.k1.*(obj.rs - rads(n_indx_rad))*obj.dt;
             rads = min(rads,obj.rs);
             polar_points=[rads;angles];
-            [m_cr, i_r] = min(polar_points(1,:));
-            m_ca = angles(i_r);
-            start_pt = obj.pos_est + m_cr*[cos(m_ca);sin(m_ca)];
-            pt1 = start_pt + 2*obj.rs*[cos(m_ca + pi/2);sin(m_ca + pi/2)];
-            pt2 = pt1 + obj.rs*[cos(m_ca);sin(m_ca)];
-            pt4 = start_pt + 20*obj.rs*[cos(m_ca - pi/2);sin(m_ca - pi/2)];
-            pt3 = pt4 + obj.rs*[cos(m_ca);sin(m_ca)];
-            cell_corr_verts = [pt1,pt2,pt3,pt4];
+            % [m_cr, i_r] = min(polar_points(1,:));
+            % m_ca = angles(i_r);
+            
             obj.verts_unc = obj.pos_est + rads.*[cos(angles);sin(angles)];
-            poly1 = polyshape(obj.verts_unc(1,:),obj.verts_unc(2,:));
-            env =  polyshape([0 0 obj.sizes obj.sizes],[obj.sizes 0 0 obj.sizes]);
-            poly1 = intersect(poly1,env);
-            cell_correction = polyshape(cell_corr_verts(1,:),cell_corr_verts(2,:));
-            % inter = intersect(poly1,cell_correction);
-            safety_set = subtract(poly1,cell_correction);
-            % obj.verts_unc = polyfin.Vertices';
-            obj.verts_unc = poly1.Vertices';
-            obj.verts_zi = safety_set.Vertices';
+            % env =  polyshape([0 0 obj.sizes obj.sizes],[obj.sizes 0 0 obj.sizes]);
+            % poly1 = intersect(poly1,env);
+            % obj.verts_unc = poly1.Vertices';
+            n_convI = convex_verts(obj.verts_unc);
+
+            if ~isempty(n_convI)
+                poly1 = polyshape(obj.verts_unc(1,:),obj.verts_unc(2,:));
+                start_pt = obj.pos_est + rads(n_convI).*[cos(angles(n_convI));sin(angles(n_convI))];
+                pt1 = start_pt + 2*obj.rs*[cos(angles(n_convI) + pi/2);sin(angles(n_convI) + pi/2)];
+                pt2 = pt1 + obj.rs*[cos(angles(n_convI));sin(angles(n_convI))];
+                pt4 = start_pt + 2*obj.rs*[cos(angles(n_convI) - pi/2);sin(angles(n_convI) - pi/2)];
+                pt3 = pt4 + obj.rs*[cos(angles(n_convI));sin(angles(n_convI))];
+                
+                for j=1:length(n_convI)
+                    cell_corr_verts = [pt1(:,j),pt2(:,j),pt3(:,j),pt4(:,j)];
+                    cell_correction{j} = polyshape(cell_corr_verts(1,:),cell_corr_verts(2,:));
+                end
+                cell_mat = repmat(polyshape, 1, length(cell_correction));
+                for k = 1:length(cell_mat)
+                    cell_mat(k) = cell_correction{k} ;
+                end
+                % inter = intersect(poly1,cell_correction);
+                safety_set = subtract(poly1,union(cell_mat));
+                % obj.verts_unc = safety_set.Vertices';
+                obj.verts_zi = safety_set.Vertices';
+            else
+                obj.verts_zi = obj.verts_unc;
+            end
         end
 
         % function update_phi_cont(obj)

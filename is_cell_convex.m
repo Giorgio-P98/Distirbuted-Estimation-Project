@@ -1,16 +1,33 @@
-function [convex] = is_cell_convex(vertex)
-l = length(vertex);
-convex = false;
-for i=2:l-1
-    v1 = [vertex(1,i) - vertex(1,i-1), vertex(2,i) - vertex(2,i-1)];
-    v2 = [vertex(1,i) - vertex(1,i+1), vertex(2,i) - vertex(2,i+1)];
-    if det([v1',v2']) >= 0
-        convex = true;
-        return;
+function isConvex = Convex_verts(px,py)
+% Given a set of points determine if they form a convex polygon
+% Inputs 
+%  px, py: x and y coordinates of the vertices for a given polygon
+
+% Output 
+%  isConvex: 1 or 0 for polygon being convex or concave
+
+% can determine if the polygon is convex based on the direction the angles
+% turn.  If all angles are the same direction, it is convex.
+v1 = [px(1) - px(end), py(1) - py(end)];
+v2 = [px(2) - px(1), py(2) - py(1)];
+signPoly = sign(det([v1; v2]));
+
+for k = 2:numPoints-1
+    v1 = v2;
+    v2 = [px(k+1) - px(k), py(k+1) - py(k)]; 
+    curr_signPoly = sign(det([v1; v2]));
+    % check that the signs match
+    if not (isequal(curr_signPoly, signPoly))
+        isConvex = false;
+        return
     end
 end
-
-v1 = [vertex(1,l) - vertex(1,l-1), vertex(2,l) - vertex(2,l-1)];
-v2 = [vertex(1,l) - vertex(1,1), vertex(2,l) - vertex(2,1)];
-if det([v1,v2]); convex = true; end
+% check the last vectors
+v1 = v2;
+v2 = [px(1) - px(end), py(1) - py(end)];
+curr_signPoly = sign(det([v1; v2]));
+if not (isequal(curr_signPoly, signPoly))
+    isConvex = false;
+else
+    isConvex = true;
 end
