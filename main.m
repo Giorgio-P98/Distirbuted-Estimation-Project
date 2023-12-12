@@ -127,6 +127,3 @@ while(t<sim_t)
     t = t+dt;
 end
 explored_plot(bots,n_r, poly_obstacles,sizes, 3)
-%%
-
-

@@ -1,5 +1,7 @@
 classdef Bot < handle
     properties
+        x
+        y
         pos
         neighbours
         obst
@@ -20,8 +22,8 @@ classdef Bot < handle
         prev_cell_center = []
         cell_center = []
         steps_vert = 31
-        noise_model_std = 0.5
-        gps_noise_std = 0.5
+        noise_model_std = 0.2
+        gps_noise_std = 0.2
         P = [50 0;0 50]
         pos_est
         mesh_map = {}
@@ -34,10 +36,7 @@ classdef Bot < handle
         ku = 0.2
         k0 = 1.5
         k1 = 0.2
-        x
-        y
-        
-
+        incumbrance = 0.6
     end
 
     methods
@@ -107,6 +106,7 @@ classdef Bot < handle
             %%plot(obj.verts(1,:),obj.verts(2,:))
             plot([obj.verts_unc(1,:),obj.verts_unc(1,1)],[obj.verts_unc(2,:),obj.verts_unc(2,1)])
             plot_unc(obj)
+            plot_disk(obj.pos(1),obj.pos(2),obj.incumbrance)
         end
 
 
@@ -214,7 +214,9 @@ classdef Bot < handle
         %     obj.verts_unc = poly1.Vertices';
         % end
 
-        function polar_points=vertex_unc2(obj)
+                function polar_points=vertex_unc2(obj)
+            %%obj.id
+            %%obsts = obstacles_in_polar(obj);
             obj.verts_unc=[];
             d_th = 2*pi/obj.steps_vert;
             th = 0;
@@ -225,6 +227,7 @@ classdef Bot < handle
             rads=[];
             angles=[];
             while th <= 2*pi
+                %%obj.id
                 v_cand = rs_.*[cos(th);sin(th)];
                 k = 1;
                 
@@ -246,7 +249,7 @@ classdef Bot < handle
                     rs_ = rs_ - rs_step;
                     if rs_ <= 0
                        %obj.verts_unc(:,end+1) = obj.pos_est +0.05.*[cos(th);sin(th)] ;
-                       rads=[rads,0.2];
+                       rads=[rads,0.05];
                        angles=[angles,th];
                        rs_ = obj.rs;
                        th = th +d_th;
@@ -255,13 +258,17 @@ classdef Bot < handle
             end
             th = 0;
             if ~isempty(obj.obsts_lidar)
+                obj.obsts_lidar(1,:) = obj.obsts_lidar(1,:) - obj.incumbrance;
                 for i=1:length(angles)
                     candidates = find(abs(angles(i)-obj.obsts_lidar(2,:))<0.05);
                     candidates_args = obj.obsts_lidar(2,candidates);
                     [~,indx]=min(abs(candidates_args-th));
                     indx=candidates(indx);
                     if obj.obsts_lidar(1,indx) < rads(i)
-                        rads(i) = obj.obsts_lidar(1,indx);
+                        rads(i) = obj.obsts_lidar(1,indx);% - obj.incumbrance;
+                        if rads(i) <=0
+                            rads(i) = 0.05;
+                        end
                     end
                 end
             end
