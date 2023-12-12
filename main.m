@@ -4,20 +4,21 @@ close all;
 
 
 %% Map constants
-wall_t = 1;
-door = 4;
-corridor = 4;
+wall_t = 1.5;
+door = 6;
+corridor = 5;
 
 t=0;
 sim_t = 50;
 dt = 0.1;
 n_r = 7;
-rc = 10;
-rs = rc/2;
+rc = 50;
+rs = 10/2;
 n_obs = 5;
-n_pointxm = 1000;
+Rr = 0.4;
+n_pointxm = 2000;
 sizes = 50;
-bots = Bot(0,0,0,0,0);
+bots = Bot(0,0,0,0,0,0);
 obstacles = {zeros(n_obs)};
 poly_obstacles={zeros(n_obs,1)};
 % obstacles{1} = build_obst(3.*[10,20,30,35,20;10,10,20,40,60],20);
@@ -54,7 +55,7 @@ end
 % end
 robot_init = [48 9; 45 9; 42 9; 48 12; 45 12; 42 12; 45 15];
 for i=1:n_r
-     bots(i) = Bot(dt,sizes,rs,rc,i);
+     bots(i) = Bot(dt,sizes,rs,rc,Rr,i);
      bots(i).pos = robot_init(i,:)';
      bots(i).pos_est = bots(i).pos + bots(i).gps_noise_std.*randn(2,1);
 end

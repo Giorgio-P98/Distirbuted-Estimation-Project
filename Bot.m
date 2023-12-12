@@ -14,11 +14,12 @@ classdef Bot < handle
         verts_unc = []
         verts_qt = []
         verts_qtnosi = []
+        verts_zi = []
         id
         cell_mass
         prev_cell_center = []
         cell_center = []
-        steps_vert = 21
+        steps_vert = 31
         noise_model_std = 0.5
         gps_noise_std = 0.5
         P = [50 0;0 50]
@@ -26,26 +27,27 @@ classdef Bot < handle
         mesh_map = {}
         firstupdate = true
         firstupdate_qt = true
+        bot_dim
         phi__ = 10
         kp = 10
-        kd = 2
+        kd = 1
         ku = 0.2
         k0 = 1.5
         k1 = 0.2
         x
         y
-
         
 
     end
 
     methods
-        function obj = Bot(dt,sizee,rs,rc,id)
+        function obj = Bot(dt,sizee,rs,rc,bot_r, id)
             obj.dt = dt;
             obj.sizes = sizee;
             obj.pos = (obj.sizes-2).*rand(2,1);
             obj.pos_est = obj.pos + obj.gps_noise_std.*randn(2,1);
             obj.neighbours = [];
+            obj.bot_dim = bot_r;
             obj.rs = rs;
             obj.rc = rc;
             obj.rs_min = 0.3*rs;
@@ -267,12 +269,26 @@ classdef Bot < handle
             n_indx_rad = not(indx_rad);
             rads(indx_rad) = rads(indx_rad) + obj.k0.*(obj.rs_min - rads(indx_rad))*obj.dt;
             rads(n_indx_rad) = rads(n_indx_rad) + obj.k1.*(obj.rs - rads(n_indx_rad))*obj.dt;
+            rads = min(rads,obj.rs);
             polar_points=[rads;angles];
+            [m_cr, i_r] = min(polar_points(1,:));
+            m_ca = angles(i_r);
+            start_pt = obj.pos_est + m_cr*[cos(m_ca);sin(m_ca)];
+            pt1 = start_pt + 2*obj.rs*[cos(m_ca + pi/2);sin(m_ca + pi/2)];
+            pt2 = pt1 + obj.rs*[cos(m_ca);sin(m_ca)];
+            pt4 = start_pt + 20*obj.rs*[cos(m_ca - pi/2);sin(m_ca - pi/2)];
+            pt3 = pt4 + obj.rs*[cos(m_ca);sin(m_ca)];
+            cell_corr_verts = [pt1,pt2,pt3,pt4];
             obj.verts_unc = obj.pos_est + rads.*[cos(angles);sin(angles)];
             poly1 = polyshape(obj.verts_unc(1,:),obj.verts_unc(2,:));
             env =  polyshape([0 0 obj.sizes obj.sizes],[obj.sizes 0 0 obj.sizes]);
             poly1 = intersect(poly1,env);
+            cell_correction = polyshape(cell_corr_verts(1,:),cell_corr_verts(2,:));
+            % inter = intersect(poly1,cell_correction);
+            safety_set = subtract(poly1,cell_correction);
+            % obj.verts_unc = polyfin.Vertices';
             obj.verts_unc = poly1.Vertices';
+            obj.verts_zi = safety_set.Vertices';
         end
 
         % function update_phi_cont(obj)
@@ -406,7 +422,7 @@ classdef Bot < handle
         end
 
         function mass_centroid(obj)
-            [obj.cell_mass,obj.cell_center(1,1),obj.cell_center(2,1)] = MC_int_surface(2*obj.rs,obj.pos_est,obj.verts_unc,@(x,y) obj.interp_z(x,y));
+            [obj.cell_mass,obj.cell_center(1,1),obj.cell_center(2,1)] = MC_int_surface(2*obj.rs,obj.pos_est,obj.verts_zi,@(x,y) obj.interp_z(x,y));
         end
 
         function z_interp = interp_z(obj,x,y)
