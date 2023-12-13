@@ -22,7 +22,7 @@ figure(fignum)
 clf, hold on
 xlim([-5 sizes+5])
 ylim([0 sizes+5])
-plot(final_map)
+plot(allin)
 drawnow
 hold off
 end

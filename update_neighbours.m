@@ -12,6 +12,7 @@ for i=1:length(bots)
                 bots(i).neighbours(:,end+1) = bots(j).pos_est;
                 bots(i).neighbours_unc(end+1) = bots(j).uncertainty;
                 bots(i).mesh_map{3} = min(bots(i).mesh_map{3}, bots(j).mesh_map{3});
+                bots(i).mesh_map_meas{3} = min(bots(i).mesh_map_meas{3}, bots(j).mesh_map_meas{3});
             end
 
             % if norm(bots(i).pos - bots(j).pos) <= bots(i).rc

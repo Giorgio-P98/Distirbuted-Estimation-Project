@@ -4,10 +4,12 @@ close all;
 
 %% ENVIRONMENT CONSTRUCTION
 w_t = 1.5;              % environment wall thickness
-s = 50;                 % x-y map dimension [s[m]; s[m]]
+s = 50;                 % x-y map dimension [s;s]
 n_pointxm = 500;        % point x meter in obstacles generation(for lidar)
 
+% bots = Bot(0,0,0,0,0);  % bots
 environment = 3;        % 1, 2 or 3 for different environments
+
 if environment == 1
     % Environment 1
     n_obs = 7;
@@ -83,22 +85,22 @@ all_obs = union(P);
 %     end
 % end
 
+% Agents(robots) initialization
+robot_init = [s-50 0]+[48 9; 45 9; 42 9; 48 12; 45 12; 42 12; 45 15];
+for i=1:n_r
+     bots(i) = Bot(dt,s,rs,Rr,i);
+     bots(i).pos = robot_init(i,:)';
+     bots(i).pos_est = bots(i).pos + bots(i).gps_noise_std.*randn(2,1);
+end
+
 %% SIMULATION INIT
-t=0;                % time t [s] init
-i=0;                % i var init for plot only at certain step
+t=0;
+i=0;                % for plot only at cer
 sim_t = 50;         % simulation time [s]
 dt = 0.1;           % time step [s]
 n_r = 5;            % Number of Agents
-rs = 15;            % Maximum Lidar measurements range
+rs = 5;             % Maximum Lidar measurements range
 Rr = 0.3;           % Agent incumbrance radius
-
-% Agents(robots) init at defined positions
-robot_init = [s-50 0]+[48 9; 45 9; 42 9; 48 12; 45 12; 42 12; 45 15];
-for j=1:n_r
-     bots(j) = Bot(dt,s,rs,Rr,j);
-     bots(j).pos = robot_init(j,:)';
-     bots(j).pos_est = bots(j).pos + bots(j).gps_noise_std.*randn(2,1);
-end
 
 
 bots=update_neighbours(bots, all_obs); clc;
@@ -128,7 +130,7 @@ surf(bots(1).mesh_map_meas{1}, bots(1).mesh_map_meas{2}, bots(1).mesh_map_meas{3
 colorbar
 hold off
 
-%% SIMULATION
+%%
 
 while(t<sim_t)
     iterate(bots,@control_and_estimate);
@@ -161,12 +163,11 @@ while(t<sim_t)
         drawnow
         hold off
     end
-    % Plot the "until now" explored map
     if mod(i,50) == 0
         explored_plot(bots,n_r, poly_obstacles,s, 3)
     end
-    % sim step increment
     i = i +1;
     t = t+dt;
 end
+%%
 explored_plot(bots,n_r, poly_obstacles,s, 3)
