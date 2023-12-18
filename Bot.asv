@@ -22,13 +22,14 @@ classdef Bot < handle
         cell_mass
         prev_cell_center = []
         cell_center = []
-        steps_vert
+        steps_vert = 31
         noise_model_std
         gps_noise_std
         P = [0 0;0 0]
         pos_est
         mesh_map = {}
         mesh_map_meas = {}
+        firstupdate = true
         firstupdate_qt = true
         bot_dim
         phi__
@@ -41,7 +42,7 @@ classdef Bot < handle
 
     methods
         function obj = Bot(dt,sizee,rs,bot_r, id,d_p,rb_init,obs, ...
-                g_n,m_n,gains,gr_s,phi_max,n_verts)
+                g_n,m_n,gains,gr_s,phi_max)
             obj.dt = dt;
             obj.sizes = sizee;
             obj.noise_model_std = g_n;
@@ -64,8 +65,7 @@ classdef Bot < handle
             obj.x = sym('x');
             obj.y = sym('y');
             obj.grid_size = gr_s;
-            obj.phi__ = phi_max;
-            obj.steps_vert = n_verts;
+            obj.phi__ = phi_max
 
             [X,Y] = meshgrid(0:obj.grid_size:obj.sizes+10,0:obj.grid_size:obj.sizes+10);
             obj.mesh_map = {X Y obj.phi__.*ones(size(X))};

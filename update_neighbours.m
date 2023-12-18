@@ -4,7 +4,7 @@ for i=1:length(bots)
     bots(i).neighbours=[];
     for j=1:length(bots)
         if ne(i,j)
-            jb_pt = [-0.01, 0.01]+bots(j).pos;
+            jb_pt = bots(j).pos;
             l_point = [ib_pt jb_pt];
             line = polyshape(l_point(1,:), l_point(2,:));
             inter = intersect(obstacles,line);
