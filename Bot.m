@@ -207,7 +207,7 @@ classdef Bot < handle
                 obst_with_unc = obj.obsts_lidar;
                 obst_with_unc(1,:) = obst_with_unc(1,:) - obj.bot_dim - dist_safe;
                 for i=1:length(angles)
-                    candidates = find(abs(angles(i)-obst_with_unc(2,:))<0.05);
+                    candidates = find(abs(angles(i)-obst_with_unc(2,:))<0.01);
                     candidates_args = obst_with_unc(2,candidates);
                     [~,indx]=min(abs(candidates_args-angles(i)));
                     indx=candidates(indx);

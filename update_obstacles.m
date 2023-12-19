@@ -1,4 +1,4 @@
-function updated_obstacles = update_obstacles(obstacles,bots)
+function updated_obstacles = update_obstacles(obstacles,bots,n_ray)
 for i=1:length(bots)
     bots(i).obst=[];
     
@@ -9,7 +9,8 @@ for i=1:length(bots)
     %         end
     %     end
     % end
-    [~,bots(i).obsts_lidar] = lidar_sim(obstacles,bots(i).pos,bots(i).rs);
+    [~,bots(i).obsts_lidar] = lidar_sim(obstacles, bots(i).pos, ...
+        bots(i).rs, n_ray);
 end
 updated_obstacles = bots;
 end

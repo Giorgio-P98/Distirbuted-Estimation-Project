@@ -1,7 +1,8 @@
 %% ENVIRONMENT CONSTRUCTION
 w_t = 1.5;              % environment wall thickness
 s = 50;                 % x-y map dimension [s[m]; s[m]]
-n_pointxm = 500;        % point x meter in obstacles generation(for lidar)
+n_pointxm = 500;        % point x meter in obstacles generation
+n_lidar = 1000;         % n of ray in 2*pi rad of lidar sensing range
 
 environment = 1;        % 1, 2 or 3 for different environments
 
@@ -26,11 +27,11 @@ defined_pose = true;    % true if want to use pre-defined Agents pos,itions
 robot_init = [s-50 0]+[48 9; 45 9; 42 9; 48 12; 45 12; 42 12; 45 15];
 
 % Simulation noises
-gps_n = round(0.01*rs/10,3);          % gps noise standard deviation
-model_n = round(0.01*rs/10,3);        % model noise standard deviation
+gps_n = round(rs/10,3);          % gps noise standard deviation
+model_n = round(rs/10,3);        % model noise standard deviation
 
 % Algo gains
-kp = 10;                 % proprotional control velocity gain
+kp = 10;                % proprotional control velocity gain
 kd = 1.0;               % dynamics set update mesh_map(Phi) gain
 ku = 0.2;               % visited set update mesh_map(Phi) gain
 k0 = 1.5;               % dynamics of the cell radius gain (decrease rate)
@@ -39,7 +40,7 @@ k1 = 0.3;               % dynamics of the cell radius gain (increase rate)
 gains = {kp,kd,ku,k0,k1};
 
 % WANT PLOT?
-want_plot = false;      % true if you want dynamic plot
+want_plot = false;      % true if you want dynamic plots
 
 % Environment polyshape
 

@@ -1,5 +1,5 @@
-function [obsts,scansion] = lidar_sim(obstacles,sensor_pos,rs)
-n_th = 1000;
+function [obsts,scansion] = lidar_sim(obstacles,sensor_pos,rs,n_ray)
+n_th = n_ray;
 obst=[];
 obsts = [];
 scansion = [];

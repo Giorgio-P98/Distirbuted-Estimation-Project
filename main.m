@@ -89,7 +89,7 @@ end
 
 % Algoritm initialization
 bots=update_neighbours(bots, all_obs); clc;
-bots=update_obstacles(obstacles,bots);
+bots=update_obstacles(obstacles,bots,n_lidar);
 iterate(bots,@vertex_unc2);
 iterate(bots,@qt_qtnosi_update);
 iterate(bots,@update_phi)
@@ -121,7 +121,7 @@ tic
 while(explored < 0.99)
     iterate(bots,@control_and_estimate);
     bots=update_neighbours(bots, all_obs);
-    bots=update_obstacles(obstacles,bots);
+    bots=update_obstacles(obstacles,bots,n_lidar);
     iterate(bots,@vertex_unc2);
     warning('off')
     iterate(bots,@qt_qtnosi_update);
