@@ -1,4 +1,4 @@
-classdef Bot < handle
+classdef Bot2 < handle
     properties
         x
         y
@@ -40,12 +40,12 @@ classdef Bot < handle
     end
 
     methods
-        function obj = Bot(dt,sizee,rs,bot_r, id,d_p,rb_init,obs, ...
+        function obj = Bot2(dt,sizee,rs,bot_r, id,d_p,rb_init,obs, ...
                 g_n,m_n,gains,gr_s,phi_max,n_verts)
             obj.dt = dt;
             obj.sizes = sizee;
-            obj.noise_model_std = m_n;
-            obj.gps_noise_std = g_n;
+            obj.noise_model_std = g_n;
+            obj.gps_noise_std = m_n;
             if d_p
                 obj.pos = rb_init(id,:)';
             else
@@ -55,7 +55,7 @@ classdef Bot < handle
                 end
             end
             [obj.kp,obj.kd,obj.ku,obj.k0,obj.k1] = gains{:};
-            obj.pos_est = obj.pos + 0*obj.gps_noise_std.*randn(2,1);
+            obj.pos_est = obj.pos + obj.gps_noise_std.*randn(2,1);
             obj.neighbours = [];
             obj.bot_dim = bot_r;
             obj.rs = rs;
@@ -86,11 +86,11 @@ classdef Bot < handle
             if abs(obj.P(1,1)) > 20 || abs(obj.P(2,2)) > 20
                 u = [0;0];
             end
-            obj.pos = obj.pos + u.*obj.dt + obj.noise_model_std^2.*randn(2,1);
+            obj.pos = obj.pos + u.*obj.dt+ obj.noise_model_std.*randn(2,1);
 
-            pos_est_ = obj.pos_est + u.*obj.dt;
-            P_ = obj.P + obj.noise_model_std^2.*eye(2);
-            S = P_ + obj.gps_noise_std^2.*eye(2);
+            pos_est_ = obj.pos_est + u.*obj.dt ;
+            P_ = obj.P + obj.noise_model_std.*eye(2);
+            S = P_ + obj.gps_noise_std.*eye(2);
             W = P_/S;
             pos_estt = pos_est_ + W*((obj.pos+obj.gps_noise_std.*randn(2,1))-pos_est_);
             obj.pos_est = pos_estt;
@@ -150,7 +150,7 @@ classdef Bot < handle
         function radius=uncertainty(obj)
             [~,l]=eig(obj.P);
             %%radius = 1/2*min(l(:));
-            radius = 3.*max(l(:));
+            radius = sqrt(5.991*max(l(:)));
         end
 
         % function polar_points=vertex_unc2(obj)
@@ -174,7 +174,7 @@ classdef Bot < handle
                 v_cand = rs_.*[cos(th);sin(th)];
                 k = 1;
                 for i = 1:size(obj.neighbours,2)
-                    if norm(v_cand) + obj.bot_dim +dist_safe + obj.neighbours_unc(i) < norm(obj.pos_est + v_cand - obj.neighbours(:,i))
+                    if norm(v_cand) + dist_safe - obj.neighbours_unc(i) < norm(obj.pos_est + v_cand - obj.neighbours(:,i))
                         k = and(k,1);
                     else
                         k = and(k,0);
@@ -204,39 +204,21 @@ classdef Bot < handle
                 end
             end
             if ~isempty(obj.obsts_lidar)
-                main_config
-                %obst_with_unc = obj.obsts_lidar;
-                %obst_with_unc(1,:) = obst_with_unc(1,:) - obj.bot_dim - dist_safe;
-                %obst_with_unc = cartesian2polar(inflate_obsts(obj.obsts_lidar,obj.pos_est,obj.bot_dim + obj.uncertainty),obj.pos_est);
-                %obj.obsts_lidar(1,:) = obj.obsts_lidar(1,:) - obj.incumbrance - obj.uncertainty;
-                %tmp = inflate_obsts(obj.obsts_lidar,obj.pos_est,obj.bot_dim + obj.uncertainty);
-                %[~,tmp] = lidar_sim({tmp},obj.pos_est,obj.rs,n_lidar);
-                %tmp =polar2cartesian(tmp,obj.pos_est);
-                %obst_with_unc = cartesian2polar(tmp,obj.pos_est);
-                tmp = cartesian2polar(inflate_obsts(obj.obsts_lidar,obj.pos(1:2),obj.bot_dim + obj.uncertainty),obj.pos(1:2));
-                obst_with_unc = tmp;
+                obst_with_unc = obj.obsts_lidar;
+                obst_with_unc(1,:) = obst_with_unc(1,:) - obj.bot_dim - dist_safe;
                 for i=1:length(angles)
-                    if ~isempty(obst_with_unc)
-                        candidates = find(abs(angles(i)-obst_with_unc(2,:))<0.1);
-                        candidates_args = obst_with_unc(2,candidates);
-                        %[~,indx]=min(abs(candidates_args-angles(i)));
-                        [~,indx]=min(obst_with_unc(1,candidates));
-                        indx=candidates(indx);
-                        if ~isempty(indx)
-                            if obst_with_unc(1,indx) <= rads(i)
-                                rads(i) = obst_with_unc(1,indx(1));
-                                if rads(i) <= 0
-                                    rads(i) = 0.05;
-                                end
-                            end
-                            candidates = find(abs(angles(i)-obj.obsts_lidar(2,:))<0.01);
-                            candidates_args = obj.obsts_lidar(2,candidates);
-                            [~,indx]=min(abs(candidates_args-angles(i)));
-                            indx=candidates(indx);
-                            if ~isempty(indx)
-                                rads_meas(i) = obj.obsts_lidar(1,indx(1));
+                    candidates = find(abs(angles(i)-obst_with_unc(2,:))<0.01);
+                    candidates_args = obst_with_unc(2,candidates);
+                    [~,indx]=min(abs(candidates_args-angles(i)));
+                    indx=candidates(indx);
+                    if ~isempty(indx)
+                        if obst_with_unc(1,indx) < rads(i)
+                            rads(i) = obst_with_unc(1,indx);
+                            if rads(i) <= 0
+                                rads(i) = 0.05;
                             end
                         end
+                        rads_meas(i) = obj.obsts_lidar(1,indx);
                     end
                 end
             end

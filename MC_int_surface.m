@@ -11,4 +11,13 @@ function [mass,cx,cy] = MC_int_surface(int_size,point_in,vertex,f)
     cx = area__*mean([g(xq(in),yq(in)),g(xq(on),yq(on))])/mass;
     h = @(x,y) y.*f(x,y);
     cy = area__*mean([h(xq(in),yq(in)),h(xq(on),yq(on))])/mass;
+    if isnan(mass)
+        mass=1;
+    end
+    if isnan(cx)
+        cx=point_in(1);
+    end
+    if isnan(cy)
+        cy=point_in(2);
+    end
 end
