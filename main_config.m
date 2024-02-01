@@ -16,6 +16,7 @@ n_r = 7;                % Number of Agents
 rs = 4;                 % Maximum Lidar measurements range
 Rr = 0.25;              % Agents incumbrance radius
 explored = 0;           % Explored fraction of total
+explor_limit = 0.95;    % Environment is fully explored
 
 grid_s = 1.0;           % grid cell dimension (mesh_map)
 phi_max = 10;           % max value of the mesh_map (initial value)
@@ -65,10 +66,7 @@ point_env = [0,0,s+10,s+10;0,s+5,s+5,0];
 env = polyshape(point_env(1,:), point_env(2,:));
 
 %% RENDEZVOUS
-
-% rendezvous_yes = false;      % when true, the dynamic change to rendezvous
-% rendezvous_pos = NaN(2,1);   % rendezvous point (x, y), initially unknown
-% target_pt = NaN(2,1);        % target position (x, y), initially unknown
+REND = false;
 
 target_pos = [round(s/5); round(s/2)];
 target_dim = 0.4;

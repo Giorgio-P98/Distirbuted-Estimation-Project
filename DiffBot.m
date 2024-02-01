@@ -26,6 +26,7 @@ classdef DiffBot < handle
         steps_vert
         noise_model_std
         gps_noise_std
+        mag_noise_std
         P = [0 0 0;0 0 0;0 0 0]+0.05*eye(3)
         pos_est
         mesh_map = {}
@@ -33,13 +34,12 @@ classdef DiffBot < handle
         firstupdate_qt = true
         bot_dim
         phi__
+        kp 
         kd
         ku
         k0
         k1
         Ppred
-        u_clip
-        w_clip
         kg
         kl
         rendezvous_yes = false;
@@ -54,16 +54,19 @@ classdef DiffBot < handle
         ki
         rho_i
         rho_i_D
+        u_clip
+        w_clip
     end
 
     methods
         function obj = DiffBot(dt,sizee,rs,bot_r, id,d_p,rb_init,obs,...
-                g_n,m_n,gains,gr_s,phi_max,n_verts, u_clip, w_clip, ...
-                target_pos,ki,rho_i_init,rho_iD)
+                g_n,m_n,mag_n,gains_ddr,gr_s,phi_max,n_verts, ...
+                target_pos,ki,rho_i_init,rho_iD,u_clip,w_clip)
             obj.dt = dt;
             obj.sizes = sizee;
             obj.noise_model_std = m_n;
             obj.gps_noise_std = g_n;
+            obj.mag_noise_std = mag_n;
             if d_p
                 obj.pos = [rb_init(id,:)';pi/2];
             else
@@ -72,7 +75,7 @@ classdef DiffBot < handle
                     obj.pos(1:2) = (obj.sizes-2).*rand(2,1);
                 end
             end
-            [obj.kg,obj.kl,obj.kd,obj.ku,obj.k0,obj.k1] = gains{:};
+            [obj.kg,obj.kl,obj.kd,obj.ku,obj.k0,obj.k1] = gains_ddr{:};
             obj.pos_est = obj.pos ;
             obj.neighbours = [];
             obj.bot_dim = bot_r;
@@ -85,8 +88,6 @@ classdef DiffBot < handle
             obj.grid_size = gr_s;
             obj.phi__ = phi_max;
             obj.steps_vert = n_verts;
-            obj.u_clip = u_clip;
-            obj.w_clip = w_clip;
 
             [X,Y] = meshgrid(0:obj.grid_size:obj.sizes+10,0:obj.grid_size:obj.sizes+10);
             obj.mesh_map = {X Y obj.phi__.*ones(size(X))};
@@ -99,7 +100,10 @@ classdef DiffBot < handle
             obj.ki = ki;
             obj.rho_i = rho_i_init;
             obj.rho_i_D = rho_iD;
-            
+
+            % Velocity clip
+            obj.u_clip = u_clip;
+            obj.w_clip = w_clip;
             
         end
 
@@ -115,59 +119,7 @@ classdef DiffBot < handle
                            w.*obj.dt] + noise.*randn(3,1);
         end
 
-        % function u= control_and_estimate(obj)
-        %     % if obj.cell_center == obj.prev_cell_center
-        %     %     u = - obj.kp.*(obj.pos_est-obj.cell_center);
-        %     % else
-        %     %     d_center_dt = (obj.cell_center - obj.prev_cell_center) ./ obj.dt;
-        %     %     u = - obj.kp.*(obj.pos_est-obj.cell_center) - obj.ke.*(d_center_dt./norm(d_center_dt));
-        %     % end
-        % 
-        %     e_k = norm(obj.cell_center - obj.pos_est(1:2));
-        %     th_k = atan2(obj.cell_center(2)-obj.pos_est(2),obj.cell_center(1)-obj.pos_est(1));
-        %     u = 10*2.*cos(th_k - obj.pos_est(3)).*e_k;
-        %     w = 10*4.*sin(th_k - obj.pos_est(3)).*cos(th_k - obj.pos_est(3)) + 2 .* (2.* th_k - obj.pos_est(3));
-        % 
-        %     if abs(obj.P(1,1)) > 20 || abs(obj.P(2,2)) > 20
-        %         u = 0;
-        %         w=0;
-        %     end
-        %     obj.pos = kinematics(obj,obj.pos,u,w,0*obj.noise_model_std);
-        % 
-        %     pos_est_ = kinematics(obj,obj.pos_est,u,w,1*obj.noise_model_std);
-        % 
-        %     JacX = [1 0 -sin(pos_est_(3)).*u.*obj.dt;
-        %             0 1  cos(pos_est_(3)).*u*obj.dt;
-        %             0 0                       1];
-        % 
-        %     % JacNoise = obj.dt.*[cos(pos_est_(3)) 0;
-        %     %                     sin(pos_est_(3)) 0;
-        %     %                     0                   1];
-        % 
-        %     JacNoise = eye(3);
-        % 
-        %     JacGPSH = [1 0 0;
-        %                0 1 0];
-        % 
-        %     P_ = JacX*obj.P*JacX'+JacNoise*(eye(3)*obj.noise_model_std.^2)*JacNoise';
-        %     obj.Ppred = JacX*obj.Ppred*JacX'+JacNoise*(eye(3)*obj.noise_model_std.^2)*JacNoise'; 
-        %     S = JacGPSH*P_*JacGPSH' + obj.gps_noise_std.^2.*eye(2);
-        %     W = (P_*JacGPSH')/S;
-        %     pos_estt = pos_est_ + W*((obj.pos(1:2)+obj.gps_noise_std.*randn(2,1))-pos_est_(1:2));
-        %     obj.pos_est = pos_estt;
-        %     obj.P = (eye(3) - W*JacGPSH)*P_*(eye(3) - W*JacGPSH)'+W*(obj.gps_noise_std.^2.*eye(2))*W';
-        %     if isnan(pos_estt(1))
-        %         error('pos_est is NaN')
-        %     end
-        % end
-
         function u= control_and_estimate(obj)
-            % if obj.cell_center == obj.prev_cell_center
-            %     u = - obj.kp.*(obj.pos_est-obj.cell_center);
-            % else
-            %     d_center_dt = (obj.cell_center - obj.prev_cell_center) ./ obj.dt;
-            %     u = - obj.kp.*(obj.pos_est-obj.cell_center) - obj.ke.*(d_center_dt./norm(d_center_dt));
-            % end
 
             if not(inpolygon(obj.cell_center(1),obj.cell_center(2),obj.verts_zi(1,:), obj.verts_zi(2,:)))
                 obj.mass_controidout()
@@ -177,24 +129,20 @@ classdef DiffBot < handle
             th_k = atan2(obj.cell_center(2)-obj.pos_est(2),obj.cell_center(1)-obj.pos_est(1));
             u = obj.kg.*cos(th_k - obj.pos_est(3)).*e_k;
             w = 2.*obj.kg.*sin(th_k - obj.pos_est(3)).*cos(th_k - obj.pos_est(3)) + obj.kl .* ( th_k - obj.pos_est(3));
-            u= sign(u)*min(obj.u_clip,abs(u));
-            w = sign(w)*min(obj.w_clip,abs(w));
+            % u= min(1.2,u);
+            % w = min(pi,w);
 
             if abs(obj.P(1,1)) > 20 || abs(obj.P(2,2)) > 20
                 u = 0;
                 w=0;
             end
-            obj.pos = kinematics2(obj,obj.pos,u,w,0*obj.noise_model_std);
+            obj.pos = kinematics2(obj,obj.pos,u,w,1*obj.noise_model_std);
 
-            pos_est_ = kinematics2(obj,obj.pos_est,u,w,obj.noise_model_std);
+            pos_est_ = kinematics2(obj,obj.pos_est,u,w,0*obj.noise_model_std);
 
             JacX = [1 0 -sin(pos_est_(3)+w*obj.dt/2).*u.*obj.dt;
                     0 1  cos(pos_est_(3)+w*obj.dt/2).*u*obj.dt;
                     0 0                       1];
-
-            % JacNoise = obj.dt.*[cos(pos_est_(3)) 0;
-            %                     sin(pos_est_(3)) 0;
-            %                     0                   1];
 
             JacNoise = eye(3);
 
@@ -203,11 +151,30 @@ classdef DiffBot < handle
 
             P_ = JacX*obj.P*JacX'+JacNoise*(eye(3)*obj.noise_model_std.^2)*JacNoise';
             obj.Ppred = JacX*obj.Ppred*JacX'+JacNoise*(eye(3)*obj.noise_model_std.^2)*JacNoise'; 
+
+            %GPS
             S = JacGPSH*P_*JacGPSH' + obj.gps_noise_std.^2.*eye(2);
             W = (P_*JacGPSH')/S;
             pos_estt = pos_est_ + W*((obj.pos(1:2)+obj.gps_noise_std.*randn(2,1))-pos_est_(1:2));
             obj.pos_est = pos_estt;
             obj.P = (eye(3) - W*JacGPSH)*P_*(eye(3) - W*JacGPSH)'+W*(obj.gps_noise_std.^2.*eye(2))*W';
+            
+            B=[0;10];
+
+            JacMagH = [0 0 -cos(obj.pos_est(3))*B(2);
+                       0 0 -sin(obj.pos_est(3))*B(2)];
+            
+            %Magnetometer
+            S = JacMagH*obj.P*JacMagH' + obj.mag_noise_std.^2.*eye(2);
+            W = (obj.P*JacMagH')/S;
+            RotEst = [cos(obj.pos_est(3)) -sin(obj.pos_est(3));
+                   sin(obj.pos_est(3)) cos(obj.pos_est(3))];
+            Rot=[cos(obj.pos(3)) -sin(obj.pos(3));
+                   sin(obj.pos(3)) cos(obj.pos(3))];
+            
+            obj.pos_est = obj.pos_est + W*(Rot*B+obj.mag_noise_std.*randn(2,1)-RotEst*B);
+            obj.P = (eye(3) - W*JacMagH)*obj.P*(eye(3) - W*JacMagH)'+W*(obj.mag_noise_std.^2.*eye(2))*W';
+
             if isnan(pos_estt(1))
                 error('pos_est is NaN')
             end
@@ -229,8 +196,11 @@ classdef DiffBot < handle
             %%plot(obj.verts(1,:),obj.verts(2,:))
             % plot([obj.verts_unc(1,:),obj.verts_unc(1,1)],[obj.verts_unc(2,:),obj.verts_unc(2,1)])
             % plot([obj.verts_meas(1,:),obj.verts_meas(1,1)],[obj.verts_meas(2,:),obj.verts_meas(2,1)])
+            %verts_uncc=inv([cos(obj.pos_est(3)) -sin(obj.pos_est(3)); sin(obj.pos_est(3))  cos(obj.pos_est(3))])*(obj.verts_unc-obj.pos_est(1:2)) + obj.pos_est(1:2);
+            %verts_zii=inv([cos(obj.pos_est(3)) -sin(obj.pos_est(3)); sin(obj.pos_est(3))  cos(obj.pos_est(3))])*(obj.verts_zi-obj.pos_est(1:2)) + obj.pos_est(1:2);
             plot([obj.verts_unc(1,:),obj.verts_unc(1,1)],[obj.verts_unc(2,:),obj.verts_unc(2,1)])
             plot([obj.verts_zi(1,:),obj.verts_zi(1,1)],[obj.verts_zi(2,:),obj.verts_zi(2,1)])
+            %plot([obj.verts_qt(1,:),obj.verts_qt(1,1)],[obj.verts_qt(2,:),obj.verts_qt(2,1)])
             plot_unc(obj)
             plot_disk(obj.pos(1),obj.pos(2),obj.bot_dim);
         end
@@ -267,7 +237,6 @@ classdef DiffBot < handle
             radius = 3.*sqrt(max(l(:)));
         end
 
-        % function polar_points=vertex_unc2(obj)
         function vertex_unc2(obj)
             obj.verts_unc=zeros(2, obj.steps_vert);
             obj.verts_meas=zeros(2, obj.steps_vert);
@@ -279,12 +248,8 @@ classdef DiffBot < handle
             rads= zeros(1,obj.steps_vert);
             rads_meas = obj.rs*ones(1,obj.steps_vert);
             angles= zeros(1,obj.steps_vert);
-            % rads= [];
-            % rads_meas = obj.rs*ones(1,obj.steps_vert);
-            % angles= [];
             j = 1;
             while j <= obj.steps_vert
-            % while th <= 2*pi
                 v_cand = rs_.*[cos(th);sin(th)];
                 k = 1;
                 for i = 1:size(obj.neighbours,2)  
@@ -297,62 +262,57 @@ classdef DiffBot < handle
                     end
                 end
                 if k
-                    %obj.verts_unc(:,end+1) = obj.pos_est + v_cand;
                     rads(j)= rs_ -obj.bot_dim - dist_safe;
                     if rads(j) <= 0
-                       %obj.verts_unc(:,end+1) = obj.pos_est +0.05.*[cos(th);sin(th)] ;
                        rads(j) = 0.05;
                     end
                     angles(j)= th;
-                    % rads = [rads,rs_];
-                    % angles = [angles,th];
                     rs_ = obj.rs;
                     th = th + d_th;
                     j = j+1;
                 else
                     rs_ = rs_ - rs_step;
                     if rs_ <= 0
-                       %obj.verts_unc(:,end+1) = obj.pos_est +0.05.*[cos(th);sin(th)] ;
                        rads(j) = 0.05;
                        angles(j) = th;
-                       % rads = [rads,0.05];
-                       % angles = [angles,th];
                        rs_ = obj.rs;
                        th = th +d_th;
                        j = j+1;
                     end
                 end
             end
-            if ~isempty(obj.obsts_lidar)
+            angles = angles +obj.pos_est(3);
+            angles(angles>=2*pi)=angles(angles>=2*pi)-2*pi;
+            angles=adjust_angle(angles);
+            rads2=rads;
+            
+            if size(obj.obsts_lidar,2)>1
+                obj.obsts_lidar(1,:) = obj.obsts_lidar(1,:) + 1*0.05*randn(1,size(obj.obsts_lidar,2));
+                obj.obsts_lidar(2,:) = obj.obsts_lidar(2,:) + obj.pos(3);
+                obj.obsts_lidar(2,:) = adjust_angle(obj.obsts_lidar(2,:));
+                cart_obst = [cos(obj.pos_est(3)) -sin(obj.pos_est(3)); sin(obj.pos_est(3))  cos(obj.pos_est(3))]*polar2cartesian(obj.obsts_lidar,[0;0]) + obj.pos_est(1:2); 
+                cart_obst = cartesian2polar(cart_obst,obj.pos_est(1:2));
                 main_config
-                %obst_with_unc = obj.obsts_lidar;
-                %obst_with_unc(1,:) = obst_with_unc(1,:) - obj.bot_dim - dist_safe;
-                %obst_with_unc = cartesian2polar(inflate_obsts(obj.obsts_lidar,obj.pos_est,obj.bot_dim + obj.uncertainty),obj.pos_est);
-                %obj.obsts_lidar(1,:) = obj.obsts_lidar(1,:) - obj.incumbrance - obj.uncertainty;
-                %tmp = inflate_obsts(obj.obsts_lidar,obj.pos_est,obj.bot_dim + obj.uncertainty);
-                %[~,tmp] = lidar_sim({tmp},obj.pos_est,obj.rs,n_lidar);
-                %tmp =polar2cartesian(tmp,obj.pos_est);
-                %obst_with_unc = cartesian2polar(tmp,obj.pos_est);
-                
-                tmp = cartesian2polar(inflate_obsts(obj.obsts_lidar,obj.pos(1:2),obj.bot_dim + 1*obj.uncertainty),obj.pos(1:2));
-                obst_with_unc = tmp;
-                if ~isempty(tmp)
-                    if ~isempty(find(tmp(1,:)<obj.uncertainty,1))
-                        tmp = cartesian2polar(inflate_obsts(obj.obsts_lidar,obj.pos(1:2),obj.bot_dim + 1/3*obj.uncertainty),obj.pos(1:2));
+                tmp= regr_scan(obj.obsts_lidar,obj.pos_est(1:2),0.5);
+                tmp=inflate(tmp,obj.uncertainty+obj.bot_dim+3.*0.05,obj.pos_est(1:2));
+                tmp=horzcat(tmp{:});
+                tmp = cartesian2polar(tmp,obj.pos_est(1:2));
+                %tmp(2,:) = tmp(2,:) -obj.pos(3);
+                obst_with_unc = obj.obsts_lidar;
+                if ~isempty(tmp) 
+                    if isempty(find(tmp(1,:)<0.1,1))
                         obst_with_unc = tmp;
-                        if ~isempty(find(tmp(1,:)<1/3*obj.uncertainty,1)) || min(obj.obsts_lidar(1,:))<obj.uncertainty
-                            obst_with_unc = obj.obsts_lidar;
-                        end
+                    else
+                        obst_with_unc = obj.obsts_lidar;
                     end
                 end
-                %tmp(2,:) = obj.obsts_lidar(2,:);
-                %obst_with_unc = tmp;
+                
                 for i=1:length(angles)
                     if ~isempty(obst_with_unc)
-                        candidates = find(abs(angles(i)-obst_with_unc(2,:))<0.1);
+                        obst_with_unc(2,:) = adjust_angle(obst_with_unc(2,:));
+                        candidates = find(abs(angles(i)-obst_with_unc(2,:))<0.05);
                         candidates_args = obst_with_unc(2,candidates);
-                        %[~,indx]=min(abs(candidates_args-angles(i)));
-                        [~,indx]=min(obst_with_unc(1,candidates));
+                        [~,indx]=min(abs(candidates_args-angles(i)));
                         indx=candidates(indx);
                         if ~isempty(indx)
                             if obst_with_unc(1,indx) <= rads(i)
@@ -361,12 +321,20 @@ classdef DiffBot < handle
                                     rads(i) = 0.05;
                                 end
                             end
-                            candidates = find(abs(angles(i)-obj.obsts_lidar(2,:))<0.05);
-                            candidates_args = obj.obsts_lidar(2,candidates);
+                            candidates = find(abs(angles(i)-obst_with_unc(2,:))<0.05);
+                            candidates_args = obst_with_unc(2,candidates);
                             [~,indx]=min(abs(candidates_args-angles(i)));
                             indx=candidates(indx);
                             if ~isempty(indx)
-                                rads_meas(i) = obj.obsts_lidar(1,indx(1));
+                                rads_meas(i) = obst_with_unc(1,indx(1));
+                                if obst_with_unc(1,indx) <= rads(i)
+                                    rads2(i) = obst_with_unc(1,indx(1));
+                                    rads(i) = obst_with_unc(1,indx(1));
+                                    if rads2(i) <= 0
+                                        rads2(i) = 0.05;
+                                        rads(i) = 0.05;
+                                    end
+                                end
                             end
                         end
                     end
@@ -377,15 +345,9 @@ classdef DiffBot < handle
             rads(indx_rad) = rads(indx_rad) + obj.k0.*(obj.rs_min - rads(indx_rad))*obj.dt;
             rads(n_indx_rad) = rads(n_indx_rad) + obj.k1.*(obj.rs - rads(n_indx_rad))*obj.dt;
             rads = min(rads,obj.rs);
-            % polar_points = [rads;angles];
             obj.verts_meas = obj.pos_est(1:2) + rads_meas.*[cos(angles);sin(angles)];
             obj.verts_unc = obj.pos_est(1:2) + rads.*[cos(angles);sin(angles)];
-            % poly1 = polyshape(obj.verts_unc(1,:),obj.verts_unc(2,:));
-            % env =  polyshape([0 0 obj.sizes obj.sizes],[obj.sizes 0 0 obj.sizes]);
-            % poly1 = intersect(poly1,env);
-            % obj.verts_unc = poly1.Vertices';
             n_convI = convex_verts(obj.verts_unc);
-
             if ~isempty(n_convI)
                 start_pt = obj.pos_est(1:2)+ rads(n_convI).*[cos(angles(n_convI));sin(angles(n_convI))];
                 pt1 = start_pt + 2*obj.rs*[cos(angles(n_convI) + pi/2);sin(angles(n_convI) + pi/2)];
@@ -393,7 +355,6 @@ classdef DiffBot < handle
                 pt4 = start_pt + 2*obj.rs*[cos(angles(n_convI) - pi/2);sin(angles(n_convI) - pi/2)];
                 pt3 = pt4 + obj.rs*[cos(angles(n_convI));sin(angles(n_convI))];
                 cell_correction = {zeros(length(n_convI),1)};
-
                 for j=1:length(n_convI)
                     cell_corr_verts = [pt1(:,j),pt2(:,j),pt3(:,j),pt4(:,j)];
                     cell_correction{j} = polyshape(cell_corr_verts(1,:),cell_corr_verts(2,:));
@@ -408,6 +369,8 @@ classdef DiffBot < handle
             else
                 obj.verts_zi = obj.verts_unc;
             end
+            obj.verts_unc=[cos(-obj.pos_est(3)) -sin(-obj.pos_est(3)); sin(-obj.pos_est(3))  cos(-obj.pos_est(3))]*(obj.verts_unc-obj.pos_est(1:2)) + obj.pos_est(1:2);
+            obj.verts_zi=[cos(-obj.pos_est(3)) -sin(-obj.pos_est(3)); sin(-obj.pos_est(3))  cos(-obj.pos_est(3))]*(obj.verts_zi-obj.pos_est(1:2)) + obj.pos_est(1:2);
         end
 
         function qt_qtnosi_update(obj)
@@ -440,13 +403,17 @@ classdef DiffBot < handle
         function update_phi(obj)
             if obj.rendezvous_yes
                 obj.rendezvous()
+                if inpolygon(obj.rendezvous_pt(1),obj.rendezvous_pt(2),obj.verts_meas(1,:), obj.verts_meas(2,:)) && isnan(obj.target_pt(1)) 
+                    obj.rendezvous_yes = false;
+                    obj.rs = obj.Rs;
+                end
             else
                 obj.exploration()
             end
         end
 
         function exploration(obj)
-            % Update Phi for dinamics (using verts_zi set)
+            % Update Phi for exploration (using verts_zi -> no concavity)
             indx = inpolygon(obj.mesh_map{1},obj.mesh_map{2},obj.verts_zi(1,:),obj.verts_zi(2,:));
             indx1 = not(obj.mesh_map{3}==obj.phi__);
             indx_QtnoSi = indx1-indx;
@@ -458,7 +425,7 @@ classdef DiffBot < handle
             obj.mesh_map{3} = max(obj.mesh_map{3},0.1*obj.phi__);
             obj.mesh_map{3} = min(obj.mesh_map{3},obj.phi__);
 
-            % Update Phi for measure (using vert_meas set)
+            % Update Phi for measure (using vert_meas)
             indx_m = inpolygon(obj.mesh_map_meas{1},obj.mesh_map_meas{2},obj.verts_meas(1,:),obj.verts_meas(2,:));
             indx1_m = not(obj.mesh_map_meas{3}==obj.phi__);
             indx_QtnoSi_m = indx1_m-indx_m;
@@ -472,28 +439,28 @@ classdef DiffBot < handle
         end
 
         function rendezvous(obj)
-            if mod(obj.zeroer,10) == 0
+            if mod(obj.zeroer,10) == 0                                      % if the zeroer is a multiple of 10, then phi is zeroed (improve rendezvous dynamic)
                 obj.mesh_map{3}(:) = 0.001*obj.phi__;
             end
-            indx = inpolygon(obj.mesh_map{1},obj.mesh_map{2},obj.verts_unc(1,:),obj.verts_unc(2,:));
+            indx = inpolygon(obj.mesh_map{1},obj.mesh_map{2},...
+                obj.verts_unc(1,:),obj.verts_unc(2,:));
             obj.rho_i_update()
             obj.set_pt_update()
-            dist_q = vecnorm([obj.mesh_map{1}(indx),obj.mesh_map{2}(indx)]' - obj.set_pt);
-            % segni = sign(obj.rs-dist_q);
-            obj.mesh_map{3}(indx) = obj.mesh_map{3}(indx) + (obj.ki.*exp(-dist_q).*obj.dt)';
-            % obj.mesh_map{3}(indx) = obj.mesh_map{3}(indx) + (segni.*(obj.ki.*exp(-dist_q./obj.rho_i).*obj.dt))';
-            % obj.mesh_map{3}(indx) = obj.mesh_map{3}(indx) + (obj.ki.*exp(-vecnorm([obj.mesh_map{1}(indx),obj.mesh_map{2}(indx)]' - obj.set_pt)./obj.rho_i).*obj.dt)';
+            dist_q = vecnorm([obj.mesh_map{1}(indx),...
+                obj.mesh_map{2}(indx)]' - obj.set_pt);
+            obj.mesh_map{3}(indx) = obj.mesh_map{3}(indx) + ...
+                (obj.ki.*exp(-dist_q).*obj.dt)';
 
             obj.mesh_map{3} = max(obj.mesh_map{3},0.001*obj.phi__);
             obj.mesh_map{3} = min(obj.mesh_map{3},obj.phi__);
-
+            
             if ~isnan(obj.target_pt(1))
+                % reduce max cell radius, givene the target distance
                 target_dist = norm(obj.pos_est(1:2) - obj.target_pt);
                 reduced_rs = max(target_dist,obj.Rs*0.3);
                 obj.rs = min(reduced_rs,obj.Rs);
             end
-
-            obj.zeroer = obj.zeroer+1;
+            obj.zeroer = obj.zeroer+1;                                      % Increase the zeroing step for the phi map
         end
 
         function rho_i_update(obj)
@@ -507,12 +474,13 @@ classdef DiffBot < handle
         function set_pt_update(obj)
             pt = [linspace(obj.pos_est(1),obj.rendezvous_pt(1), 500); ...
                   linspace(obj.pos_est(2),obj.rendezvous_pt(2), 500)];
-            isinorout_pt = inpolygon(pt(1,:),pt(2,:),obj.verts_zi(1,:),obj.verts_zi(2,:));
+            isinorout_pt = inpolygon(pt(1,:),pt(2,:),obj.verts_zi(1,:),...
+                obj.verts_zi(2,:));
             in_pt = nonzeros(isinorout_pt);
             last_index = length(in_pt);
             obj.set_pt = pt(:,last_index);
         end
-
+        
         function int_mass_centroid(obj)
             Tri = delaunayTriangulation(obj.verts_zi(1,:)', obj.verts_zi(2,:)');
             obj.cell_mass = mythreecorners(@(x,y) obj.interp_z(x,y), obj.verts_zi', Tri, false);
@@ -527,26 +495,14 @@ classdef DiffBot < handle
 
         end
 
-        % function goal_point(obj)
-        %     if obj.rendezvous_yes
-        %         obj.rendezvous()
-        %     else
-        %         obj.mass_centroid()
-        %     end
-        % end
-        % 
-        % function rendezvous(obj)
-        %     set_pt_update(obj);
-        %     obj.cell_center = obj.set_pt;
-        % end
-            
-
         function mass_centroid(obj)
-            [obj.cell_mass,obj.cell_center(1,1),obj.cell_center(2,1)] = MC_int_surface(2*obj.rs,obj.pos_est(1:2),obj.verts_unc,@(x,y) obj.interp_z(x,y));
+            [obj.cell_mass,obj.cell_center(1,1),obj.cell_center(2,1)] = MC_int_surface(2*obj.rs,obj.pos_est(1:2),obj.verts_zi,@(x,y) obj.interp_z(x,y));
+            %obj.cell_center = [cos(-obj.pos_est(3)) -sin(-obj.pos_est(3)); sin(-obj.pos_est(3))  cos(-obj.pos_est(3))]*(obj.cell_center-obj.pos_est(1:2)) + obj.pos_est(1:2);
         end
 
         function mass_controidout(obj)
             [obj.cell_mass,obj.cell_center(1,1),obj.cell_center(2,1)] = MC_int_surface(2*obj.rs,obj.pos_est(1:2),obj.verts_zi,@(x,y) obj.interp_z(x,y));
+            %obj.cell_center = [cos(-obj.pos_est(3)) -sin(-obj.pos_est(3)); sin(-obj.pos_est(3))  cos(-obj.pos_est(3))]*(obj.cell_center-obj.pos_est(1:2)) + obj.pos_est(1:2);
         end
 
         function z_interp = interp_z(obj,x,y)
