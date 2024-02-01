@@ -403,7 +403,7 @@ classdef DiffBot < handle
         function update_phi(obj)
             if obj.rendezvous_yes
                 obj.rendezvous()
-                if inpolygon(obj.rendezvous_pt(1),obj.rendezvous_pt(2),obj.verts_meas(1,:), obj.verts_meas(2,:)) && isnan(obj.target_pt(1)) 
+                if inpolygon(obj.rendezvous_pt(1),obj.rendezvous_pt(2), obj.verts_meas(1,:), obj.verts_meas(2,:)) && isnan(obj.target_pt(1)) 
                     obj.rendezvous_yes = false;
                     obj.rs = obj.Rs;
                 end
@@ -482,9 +482,12 @@ classdef DiffBot < handle
         end
         
         function int_mass_centroid(obj)
-            Tri = delaunayTriangulation(obj.verts_zi(1,:)', obj.verts_zi(2,:)');
-            obj.cell_mass = mythreecorners(@(x,y) obj.interp_z(x,y), obj.verts_zi', Tri, false);
-            f_cent = mythreecorners(@(x,y) obj.interp_z(x,y), obj.verts_zi', Tri, true);
+            Tri = delaunayTriangulation(obj.verts_zi(1,:)', ...
+                obj.verts_zi(2,:)');
+            obj.cell_mass = mythreecorners(@(x,y) obj.interp_z(x,y), ...
+                obj.verts_zi', Tri, false);
+            f_cent = mythreecorners(@(x,y) obj.interp_z(x,y), ...
+                obj.verts_zi', Tri, true);
             if ~isempty(obj.cell_center)
                 obj.prev_cell_center = obj.cell_center;
                 obj.cell_center = (f_cent/obj.cell_mass)';
@@ -497,12 +500,10 @@ classdef DiffBot < handle
 
         function mass_centroid(obj)
             [obj.cell_mass,obj.cell_center(1,1),obj.cell_center(2,1)] = MC_int_surface(2*obj.rs,obj.pos_est(1:2),obj.verts_zi,@(x,y) obj.interp_z(x,y));
-            %obj.cell_center = [cos(-obj.pos_est(3)) -sin(-obj.pos_est(3)); sin(-obj.pos_est(3))  cos(-obj.pos_est(3))]*(obj.cell_center-obj.pos_est(1:2)) + obj.pos_est(1:2);
         end
 
         function mass_controidout(obj)
             [obj.cell_mass,obj.cell_center(1,1),obj.cell_center(2,1)] = MC_int_surface(2*obj.rs,obj.pos_est(1:2),obj.verts_zi,@(x,y) obj.interp_z(x,y));
-            %obj.cell_center = [cos(-obj.pos_est(3)) -sin(-obj.pos_est(3)); sin(-obj.pos_est(3))  cos(-obj.pos_est(3))]*(obj.cell_center-obj.pos_est(1:2)) + obj.pos_est(1:2);
         end
 
         function z_interp = interp_z(obj,x,y)
