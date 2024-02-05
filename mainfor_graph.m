@@ -42,16 +42,17 @@ env_w_obs = subtract(env,all_obs);
 tot_area = area(env_w_obs);
 
 %% SIMULATION
-max_bot = 7;
-max_sim = 10;
+max_bot = 1;
+max_sim = 1;
 
 elpsed_time_mat = zeros(max_bot,max_sim);
 
 %SIMULATION
-for n_r = 2g:max_bot
+tic
+for n_r = 1:max_bot
     for n_sim = 1:max_sim
         for j=1:n_r
-            bots(j) = DiffBot24(dt,s,rs,Rr,j,defined_pose,robot_init,union(P), ...
+            bots(j) = DiffBot(dt,s,rs,Rr,j,defined_pose,robot_init,union(P), ...
                 gps_n,model_n,mag_n,gains_ddr,grid_s,phi_max,n_verts, ... 
                 target_pos,ki,rho_i_init,rho_iD,u_clip,w_clip);
         end
@@ -64,7 +65,7 @@ for n_r = 2g:max_bot
         iterate(bots,@update_phi)
         iterate(bots,@mass_centroid);
     
-        while(explored < explor_limit)
+        while(explored < explor_limit && t<50)
             if REND
                 iterate(bots,@check_object_presence);
             end
@@ -111,3 +112,4 @@ for n_r = 2g:max_bot
     
     
 end
+toc

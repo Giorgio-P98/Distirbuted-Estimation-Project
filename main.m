@@ -100,7 +100,11 @@ bots=update_neighbours(bots, all_obs); clc;
 bots=update_obstacles(obstacles,bots,n_lidar);
 iterate(bots,@vertex_unc2);
 iterate(bots,@qt_qtnosi_update);
-iterate(bots,@update_phi)
+if REND
+    iterate(bots,@update_phi)
+else
+    iterate(bots,@exploration)
+end
 iterate(bots,@mass_centroid);
 
 if want_plot
@@ -126,8 +130,10 @@ end
 %SIMULATION
 tic
 % while(t<sim_t)
-while(explored < 0.99)
-    iterate(bots,@check_object_presence);
+while(explored < 0.95)
+    if REND
+        iterate(bots,@check_object_presence);
+    end
     iterate(bots,@control_and_estimate);
     bots=update_neighbours(bots, all_obs);
     bots=update_obstacles(obstacles,bots,n_lidar);
@@ -135,7 +141,11 @@ while(explored < 0.99)
     warning('off')
     iterate(bots,@qt_qtnosi_update);
     warning('on')
-    iterate(bots,@update_phi);
+    if REND
+        iterate(bots,@update_phi)
+    else
+        iterate(bots,@exploration)
+    end
     if mod(i,centroid_step) == 0
         iterate(bots,@mass_centroid);
     end
@@ -172,7 +182,7 @@ while(explored < 0.99)
         % bots(1).P
     end
     % "Until now" explored map
-    % explored = explored_plot(bots,n_r, all_obs,s, 3, tot_area,i);
+    explored = explored_plot(bots,n_r, all_obs,s, 3, tot_area,i);
     % if mod(i,10) == 0
     clc
     disp('explored area: '+string(round(explored*100,2))+' %')

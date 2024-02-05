@@ -30,7 +30,7 @@ robot_init = [s-50 0]+[48 9; 45 9; 42 9; 48 12; 45 12; 42 12; 45 15];
 % robot_init = [s-50 0]+[8 23; 45 20; 45 45; 10 45; 45 12; 42 12; 45 15];
 
 % Simulation noises
-gps_n = 0.5;           % gps noise standard deviation
+gps_n = 1;           % gps noise standard deviation
 model_n = 0.1;         % model noise standard deviation
 mag_n = 1.0;           % magnetometer noise standard deviation
 
