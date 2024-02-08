@@ -144,7 +144,7 @@ function res = inflate(scan,dist,pos)
                 line_intrsct = [(m2(1) - m1(1))/(m1(2)-m2(2));m1(2)*((m2(1) - m1(1))/(m1(2)-m2(2))) + m1(1)];
             end
 
-            
+            if norm(line_intrsct-pos) <norm(end_point{i}-pos)
                 if verticality(i)>verticality_th
                     [~,indx] = min(vecnorm(scan{i}(2,:))-line_intrsct(2));
                     scan{i} = [scan{i},[ones(1,200).*mean(scan{i}(1,:));...
@@ -166,8 +166,30 @@ function res = inflate(scan,dist,pos)
                     scan{i+1} = [scan{i+1},[linspace(scan{i+1}(1,indx),line_intrsct(1),200);...
                         m2(1) + m2(2).*linspace(scan{i+1}(1,indx),line_intrsct(1),200)]];
                 end
+            else
+                if verticality(i)>verticality_th
+                    indx= find(s)
+                    scan{i} = [scan{i},[ones(1,200).*mean(scan{i}(1,:));...
+                        linspace(scan{i}(2,indx),line_intrsct(2),200)]];
+    
+                else
+                    [~,indx] = min(vecnorm(scan{i}(1,:))-line_intrsct(1));
+                    scan{i} = [scan{i},[linspace(scan{i}(1,indx),line_intrsct(1),200);...
+                        m1(1) + m1(2).*linspace(scan{i}(1,indx),line_intrsct(1),200)]];
+                end
+    
+                if verticality(i+1)>verticality_th
+                    [~,indx] = min(vecnorm(scan{i+1}(2,:))-line_intrsct(2));
+                    scan{i+1} = [scan{i+1},[ones(1,200).*mean(scan{i+1}(1,:));...
+                        linspace(scan{i+1}(2,indx),line_intrsct(2),200)]];
+    
+                else
+                    [~,indx] = min(vecnorm(scan{i+1}(1,:))-line_intrsct(1));
+                    scan{i+1} = [scan{i+1},[linspace(scan{i+1}(1,indx),line_intrsct(1),200);...
+                        m2(1) + m2(2).*linspace(scan{i+1}(1,indx),line_intrsct(1),200)]];
+                end
             
-            
+            end
         end
          
 

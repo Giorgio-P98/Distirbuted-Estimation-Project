@@ -54,6 +54,7 @@ function res = regr_scan(scan,pos,epsilon)
         end
 
     end
+    
 end
 
 

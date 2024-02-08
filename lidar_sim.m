@@ -63,7 +63,8 @@ end
 if ~isempty(obst)
     obst_polar(1,:) = vecnorm(sensor_pos-obst);
     tmp = atan2(obst(2,:)-sensor_pos(2,:),obst(1,:)-sensor_pos(1,:));
-    tmp(tmp<0) = tmp(tmp<0) + 2*pi;
+    tmp = adjust_angle(tmp);
+    %tmp(tmp<0) = tmp(tmp<0) + 2*pi;
     obst_polar(2,:)=tmp;
     %%[~,idx]=sort(obst_polar(2,:));
     %%obst_polar=obst_polar(:,idx);

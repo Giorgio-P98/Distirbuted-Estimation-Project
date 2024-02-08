@@ -28,7 +28,7 @@ classdef DiffBot < handle
         noise_model_std
         gps_noise_std
         mag_noise_std
-        P = [0 0 0;0 0 0;0 0 0]+0.05*eye(3)
+        P = [0 0 0;0 0 0;0 0 0]+0.0005*eye(3)
         pos_est
         mesh_map = {}
         mesh_map_meas = {}
@@ -234,7 +234,7 @@ classdef DiffBot < handle
             radius = 3.*sqrt(max(l(:)));
         end
 
-        function vertex_unc2(obj)
+        function [inf,inf0]=vertex_unc2(obj)
             obj.verts_unc=zeros(2, obj.steps_vert);
             obj.verts_meas=zeros(2, obj.steps_vert);
             d_th = 2*pi/obj.steps_vert;
@@ -287,16 +287,21 @@ classdef DiffBot < handle
                 obj.obsts_lidar(1,:) = obj.obsts_lidar(1,:) + 1*0.05*randn(1,size(obj.obsts_lidar,2));
                 obj.obsts_lidar(2,:) = obj.obsts_lidar(2,:) + obj.pos(3);
                 obj.obsts_lidar(2,:) = adjust_angle(obj.obsts_lidar(2,:));
-                cart_obst = [cos(obj.pos_est(3)) -sin(obj.pos_est(3)); sin(obj.pos_est(3))  cos(obj.pos_est(3))]*polar2cartesian(obj.obsts_lidar,[0;0]) + obj.pos_est(1:2); 
-                cart_obst = cartesian2polar(cart_obst,obj.pos_est(1:2));
+                % cart_obst = [cos(obj.pos_est(3)) -sin(obj.pos_est(3)); sin(obj.pos_est(3))  cos(obj.pos_est(3))]*polar2cartesian(obj.obsts_lidar,[0;0]) + obj.pos_est(1:2); 
+                % cart_obst = cartesian2polar(cart_obst,obj.pos_est(1:2));
                 main_config
-                tmp= regr_scan(obj.obsts_lidar,obj.pos_est(1:2),0.5);
+                tmp= regr_scan(obj.obsts_lidar,obj.pos_est(1:2),0.25);
+                tmp1 = inflate(tmp,0,obj.pos_est(1:2));
                 tmp=inflate(tmp,obj.uncertainty+obj.bot_dim+3.*0.05,obj.pos_est(1:2));
-                tmp1=cartesian2polar(horzcat(tmp{:}),obj.pos_est(1:2));
+                tmp1=cartesian2polar(horzcat(tmp1{:}),obj.pos_est(1:2));
+                %tmp1(2,:) = adjust_angle(tmp1(2,:));
                 tmp=horzcat(tmp{:});
                 tmp = cartesian2polar(tmp,obj.pos_est(1:2));
+                %tmp(2,:) = adjust_angle(tmp(2,:));
                 %tmp(2,:) = tmp(2,:) -obj.pos(3);
                 obst_with_unc = obj.obsts_lidar;
+                inf=tmp;
+                inf0=tmp1;
                 if ~isempty(tmp) 
                     if isempty(find(tmp(1,:)<obj.uncertainty+obj.bot_dim+3*0.05,1))
                         obst_with_unc = tmp;
@@ -310,8 +315,8 @@ classdef DiffBot < handle
                     if ~isempty(obst_with_unc)
                         obst_with_unc(2,:) = adjust_angle(obst_with_unc(2,:));
                         candidates = find(abs(angles(i)-obst_with_unc(2,:))<0.05);
-                        candidates_args = obst_with_unc(2,candidates);
-                        [~,indx]=min(abs(candidates_args-angles(i)));
+                        candidates_args = obst_with_unc(1,candidates);
+                        [~,indx]=min(candidates_args);
                         indx=candidates(indx);
                         if ~isempty(indx)
                             if obst_with_unc(1,indx) <= rads(i)
@@ -321,8 +326,8 @@ classdef DiffBot < handle
                                 end
                             end
                             candidates = find(abs(angles(i)-obst_with_unc(2,:))<0.05);
-                            candidates_args = obst_with_unc(2,candidates);
-                            [~,indx]=min(abs(candidates_args-angles(i)));
+                            candidates_args = obst_with_unc(1,candidates);
+                            [~,indx]=min(candidates_args);
                             indx=candidates(indx);
                             if ~isempty(indx)
                                 rads_meas(i) = obst_with_unc(1,indx(1));

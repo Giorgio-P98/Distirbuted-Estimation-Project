@@ -1,7 +1,7 @@
 %% ENVIRONMENT CONSTRUCTION
 w_t = 1.5;              % environment wall thickness
 s = 50;                 % x-y map dimension [s[m]; s[m]]
-n_pointxm = 1000;       % point x meter in obstacles generation
+n_pointxm = 2000;       % point x meter in obstacles generation
 
 n_lidar = 360 ;         % n of ray in 2*pi rad of lidar sensing range
 
@@ -32,7 +32,7 @@ robot_init = [s-50 0]+[48 9; 45 9; 42 9; 48 12; 45 12; 42 12; 45 15];
 % Simulation noises
 gps_n = 0.5;           % gps noise standard deviation
 model_n = 0.1;         % model noise standard deviation
-mag_n = 1.0;           % magnetometer noise standard deviation
+mag_n = 1;           % magnetometer noise standard deviation
 
 % Point dynamic gain
 kp = 8.0;               % proprotional control velocity gain
@@ -43,7 +43,7 @@ kl = 1.5;
 
 % general gain
 kd = 1.0;               % dynamics set update mesh_map(Phi) gain
-ku = 0.1;               % visited set update mesh_map(Phi) gain
+ku = 0.3;               % visited set update mesh_map(Phi) gain
 k0 = 0.0;              % dynamics of the cell radius gain (decrease rate) 0.05
 k1 = 0.0;              % dynamics of the cell radius gain (increase rate) 0.95
 
