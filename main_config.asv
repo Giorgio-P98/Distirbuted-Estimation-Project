@@ -12,7 +12,7 @@ t=0;                    % time t [s] init
 i=0;                    % i var init for plot only at certain step
 sim_t = 50;             % simulation time [s]
 dt = 0.1;               % time step [s]
-n_r = 5;                % Number of Agents
+n_r = 4;                % Number of Agents
 rs = 4;                 % Maximum Lidar measurements range
 Rr = 0.25;              % Agents incumbrance radius
 explored = 0;           % Explored fraction of total
@@ -42,8 +42,8 @@ kg = 7.0;
 kl = 1.5;
 
 % general gain
-kd = 1.5;               % dynamics set update mesh_map(Phi) gain
-ku = 0.1;               % visited set update mesh_map(Phi) gain
+kd = 2.5;               % dynamics set update mesh_map(Phi) gain
+ku = 0.3;               % visited set update mesh_map(Phi) gain
 k0 = 0.0;              % dynamics of the cell radius gain (decrease rate) 0.05
 k1 = 0.0;              % dynamics of the cell radius gain (increase rate) 0.95
 

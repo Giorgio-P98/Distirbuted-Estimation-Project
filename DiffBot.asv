@@ -192,7 +192,7 @@ classdef DiffBot < handle
             %%plot(obj.pos(1),obj.pos(2),'.',MarkerSize=10)
             %%plot(obj.verts(1,:),obj.verts(2,:))
             % plot([obj.verts_unc(1,:),obj.verts_unc(1,1)],[obj.verts_unc(2,:),obj.verts_unc(2,1)])
-            plot([obj.verts_meas(1,:),obj.verts_meas(1,1)],[obj.verts_meas(2,:),obj.verts_meas(2,1)])
+            % plot([obj.verts_meas(1,:),obj.verts_meas(1,1)],[obj.verts_meas(2,:),obj.verts_meas(2,1)])
             %verts_uncc=inv([cos(obj.pos_est(3)) -sin(obj.pos_est(3)); sin(obj.pos_est(3))  cos(obj.pos_est(3))])*(obj.verts_unc-obj.pos_est(1:2)) + obj.pos_est(1:2);
             %verts_zii=inv([cos(obj.pos_est(3)) -sin(obj.pos_est(3)); sin(obj.pos_est(3))  cos(obj.pos_est(3))])*(obj.verts_zi-obj.pos_est(1:2)) + obj.pos_est(1:2);
             plot([obj.verts_unc(1,:),obj.verts_unc(1,1)],[obj.verts_unc(2,:),obj.verts_unc(2,1)])
@@ -243,7 +243,7 @@ classdef DiffBot < handle
             rs_step = rs_/100;
             dist_safe = uncertainty(obj);
             rads= zeros(1,obj.steps_vert);
-            rads_meas = obj.Rs*ones(1,obj.steps_vert);
+            rads_meas = obj.rs*ones(1,obj.steps_vert);
             angles= zeros(1,obj.steps_vert);
             j = 1;
             while j <= obj.steps_vert
@@ -325,14 +325,13 @@ classdef DiffBot < handle
                                     rads(i) = 0.05;
                                 end
                             end
-                            if ~isempty(tmp1)
-                            candidates = find(abs(angles(i)-tmp1(2,:))<0.05);
-                            candidates_args = tmp1(1,candidates);
+                            candidates = find(abs(angles(i)-obj.obsts_lidar(2,:))<0.05);
+                            candidates_args = obj.obsts_lidar(1,candidates);
                             [~,indx]=min(candidates_args);
                             indx=candidates(indx);
                             if ~isempty(indx)
-                                rads_meas(i) = tmp1(1,indx(1));
-
+                                rads_meas(i) = obst_with_unc(1,indx(1));
+                                
                                 % if obst_with_unc(1,indx) <= rads(i)
                                 %     %rads2(i) = obst_with_unc(1,indx(1));
                                 %     rads(i) = obst_with_unc(1,indx(1));
@@ -340,11 +339,10 @@ classdef DiffBot < handle
                                 %         rads2(i) = 0.05;
                                 %         rads(i) = 0.05;
                                 %     end
-
+                            
                                 % end
                             else
-                                rads_meas(i) = obj.Rs;
-                            end
+                                rads_meas(i) = r
                             end
 
                         end
@@ -390,7 +388,6 @@ classdef DiffBot < handle
             end
             obj.verts_unc=[cos(obj.pos_est(3)) -sin(obj.pos_est(3)); sin(obj.pos_est(3))  cos(obj.pos_est(3))]*(obj.verts_unc-obj.pos_est(1:2)) + obj.pos_est(1:2);
             obj.verts_zi=[cos(obj.pos_est(3)) -sin(obj.pos_est(3)); sin(obj.pos_est(3))  cos(obj.pos_est(3))]*(obj.verts_zi-obj.pos_est(1:2)) + obj.pos_est(1:2);
-            obj.verts_meas = [cos(obj.pos_est(3)) -sin(obj.pos_est(3)); sin(obj.pos_est(3))  cos(obj.pos_est(3))]*(obj.verts_meas-obj.pos_est(1:2)) + obj.pos_est(1:2);
         end
 
         function qt_qtnosi_update(obj)
