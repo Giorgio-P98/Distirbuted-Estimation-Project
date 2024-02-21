@@ -32,7 +32,7 @@ robot_init = [s-50 0]+[48 9; 45 9; 42 9; 48 12; 45 12; 42 12; 45 15];
 % Simulation noises
 gps_n = 0.5;           % gps noise standard deviation
 model_n = 0.1;         % model noise standard deviation
-mag_n = 1;           % magnetometer noise standard deviation
+mag_n = 2;           % magnetometer noise standard deviation
 
 % Point dynamic gain
 kp = 8.0;               % proprotional control velocity gain
@@ -42,7 +42,7 @@ kg = 7.0;
 kl = 1.5;
 
 % general gain
-kd = 1.5;               % dynamics set update mesh_map(Phi) gain
+kd = 0.8;               % dynamics set update mesh_map(Phi) gain
 ku = 0.1;               % visited set update mesh_map(Phi) gain
 k0 = 0.0;              % dynamics of the cell radius gain (decrease rate) 0.05
 k1 = 0.0;              % dynamics of the cell radius gain (increase rate) 0.95
@@ -60,7 +60,7 @@ w_clip = 1000;
 
 % WANT PLOT?
 want_plot = true;          % true if you want dynamic plots
-plot_step = 1;
+plot_step = 3;
 
 % Environment polyshape
 point_env = [0,0,s+10,s+10;0,s+5,s+5,0];

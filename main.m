@@ -1,4 +1,4 @@
-clc;
+%clc;
 clearvars;
 close all;
 
@@ -96,7 +96,7 @@ for j=1:n_r
 end
 
 % Algoritm initialization
-bots=update_neighbours(bots, all_obs); clc;
+bots=update_neighbours(bots, all_obs); %clc;
 bots=update_obstacles(obstacles,bots,n_lidar);
 iterate(bots,@vertex_unc2);
 iterate(bots,@qt_qtnosi_update);
@@ -161,30 +161,32 @@ while(explored < 0.95)
         text(0,s+2,"sim time: "+string(t)+" [s]",'Color','white')
         drawnow
         hold off
+
+        bots(1).P
     
-        % Knowledge mesh map (discrete density Phi) plot init
-        % figure(2)
-        % clf,hold on
-        % xlim([0 s+10])
-        % ylim([0 s+5])
-        % % surf(bots(1).mesh_map_meas{1}, bots(1).mesh_map_meas{2}, bots(1).mesh_map_meas{3}, bots(1).mesh_map_meas{3})
-        % subplot(2,1,1)
-        % surf(bots(6).mesh_map{1}, bots(6).mesh_map{2}, bots(6).mesh_map{3}, bots(6).mesh_map{3})
-        % view(2)
-        % colorbar
-        % subplot(2,1,2)
-        % surf(bots(3).mesh_map{1}, bots(3).mesh_map{2}, bots(3).mesh_map{3}, bots(3).mesh_map{3})
-        % view(2)
-        % colorbar
-        % drawnow
-        % hold off
+        %Knowledge mesh map (discrete density Phi) plot init
+        figure(2)
+        clf,hold on
+        xlim([0 s+10])
+        ylim([0 s+5])
+        % surf(bots(1).mesh_map_meas{1}, bots(1).mesh_map_meas{2}, bots(1).mesh_map_meas{3}, bots(1).mesh_map_meas{3})
+        subplot(2,1,1)
+        surf(bots(5).mesh_map{1}, bots(5).mesh_map{2}, bots(5).mesh_map{3}, bots(5).mesh_map{3})
+        view(2)
+        colorbar
+        subplot(2,1,2)
+        surf(bots(3).mesh_map{1}, bots(3).mesh_map_meas{2}, bots(3).mesh_map_meas{3}, bots(3).mesh_map_meas{3})
+        view(2)
+        colorbar
+        drawnow
+        hold off
     
         % bots(1).P
     end
     % "Until now" explored map
     explored = explored_plot(bots,n_r, all_obs,s, 3, tot_area,i);
     % if mod(i,10) == 0
-    clc
+    %clc
     disp('explored area: '+string(round(explored*100,2))+' %')
     disp('Sim Elapsed time: '+string(t)+' [s]')
     % end
@@ -195,7 +197,7 @@ while(explored < 0.95)
         explored=0;
     end
 end
-clc
+%clc
 disp('explored area: '+string(round(explored*100,2))+' %')
 disp('Sim Elapsed time: '+string(t)+' [s]')
 toc

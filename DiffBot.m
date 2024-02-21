@@ -134,7 +134,7 @@ classdef DiffBot < handle
             end
             obj.pos = kinematics(obj,obj.pos,u,w,1*obj.noise_model_std);
 
-            pos_est_ = kinematics(obj,obj.pos_est,u,w,0*obj.noise_model_std);
+            obj.pos_est = kinematics(obj,obj.pos_est,u,w,0*obj.noise_model_std);
 
             JacX = [1 0 -sin(obj.pos_est(3)+w*obj.dt/2).*u.*obj.dt;
                     0 1  cos(obj.pos_est(3)+w*obj.dt/2).*u*obj.dt;
@@ -142,36 +142,57 @@ classdef DiffBot < handle
 
             JacNoise = eye(3);
 
+            
+
             JacGPSH = [1 0 0;
                        0 1 0];
 
             P_ = JacX*obj.P*JacX'+JacNoise*(eye(3)*obj.noise_model_std.^2)*JacNoise';
+            obj.P = P_;
             obj.Ppred = JacX*obj.Ppred*JacX'+JacNoise*(eye(3)*obj.noise_model_std.^2)*JacNoise'; 
 
-            %GPS
-            S = JacGPSH*P_*JacGPSH' + obj.gps_noise_std.^2.*eye(2);
-            W = (P_*JacGPSH')/S;
-            pos_estt = pos_est_ + W*((obj.pos(1:2)+obj.gps_noise_std.*randn(2,1))-pos_est_(1:2));
-            obj.pos_est = pos_estt;
-            obj.P = (eye(3) - W*JacGPSH)*P_*(eye(3) - W*JacGPSH)'+W*(obj.gps_noise_std.^2.*eye(2))*W';
-            
-            B=[0;10];
+            % GPS
+            % S = JacGPSH*obj.P*JacGPSH' + obj.gps_noise_std.^2.*eye(2);
+            % W = (obj.P*JacGPSH')/S;
+            % obj.pos_est = obj.pos_est + W*((obj.pos(1:2)+obj.gps_noise_std.*randn(2,1))-obj.pos_est(1:2));
+            % obj.P = (eye(3) - W*JacGPSH)*obj.P*(eye(3) - W*JacGPSH)'+W*(obj.gps_noise_std.^2.*eye(2))*W';
 
-            JacMagH = [0 0 -cos(obj.pos_est(3))*B(2);
-                       0 0 -sin(obj.pos_est(3))*B(2)];
-            
             %Magnetometer
-            S = JacMagH*obj.P*JacMagH' + obj.mag_noise_std.^2.*eye(2);
-            W = (obj.P*JacMagH')/S;
-            RotEst = [cos(obj.pos_est(3)) -sin(obj.pos_est(3));
-                   sin(obj.pos_est(3)) cos(obj.pos_est(3))];
-            Rot=[cos(obj.pos(3)) -sin(obj.pos(3));
-                   sin(obj.pos(3)) cos(obj.pos(3))];
-            
-            obj.pos_est = obj.pos_est + W*(Rot*B+obj.mag_noise_std.*randn(2,1)-RotEst*B);
-            obj.P = (eye(3) - W*JacMagH)*obj.P*(eye(3) - W*JacMagH)'+W*(obj.mag_noise_std.^2.*eye(2))*W';
+            B=[0;10];
+            RotEst = [cos(obj.pos_est(3)) sin(obj.pos_est(3));
+                   -sin(obj.pos_est(3)) cos(obj.pos_est(3))];
+            Rot=[cos(obj.pos(3)) sin(obj.pos(3));
+                   -sin(obj.pos(3)) cos(obj.pos(3))];
 
-            if isnan(pos_estt(1))
+            JacMagH = [0 0 +cos(obj.pos_est(3))*B(2);
+                       0 0 -sin(obj.pos_est(3))*B(2)];
+
+
+            % S = JacMagH*obj.P*JacMagH' + obj.mag_noise_std.^2.*eye(2);
+            % W = obj.P*JacMagH'/S;
+            % 
+            % 
+            % obj.pos_est = obj.pos_est + W*(Rot*B+obj.mag_noise_std.*randn(2,1)-RotEst*B);
+            % obj.P = (eye(3) - W*JacMagH)*obj.P*(eye(3) - W*JacMagH)'+W*(obj.mag_noise_std.^2.*eye(2))*W';
+
+            % % Simultaneous update
+            JacH = [1 0 0;
+                    0 1 0;
+                    0 0 cos(obj.pos(3))*B(2);
+                    0 0 -sin(obj.pos(3))*B(2)];
+            RH=[obj.gps_noise_std.^2 0 0 0;
+                                    0 obj.gps_noise_std.^2 0 0;
+                                    0 0 obj.mag_noise_std.^2 0;
+                                    0 0 0 obj.mag_noise_std.^2];
+            S = JacH*obj.P*JacH' + RH;
+            W = obj.P*JacH'/S;
+            obj.pos_est = obj.pos_est + W*([(obj.pos(1:2)+obj.gps_noise_std.*randn(2,1))-obj.pos_est(1:2);Rot*B+obj.mag_noise_std.*randn(2,1)-RotEst*B]);
+            obj.P = (eye(3) - W*JacH)*obj.P*(eye(3) - W*JacH)'+W*(RH)*W';
+
+            
+
+            
+            if isnan(obj.pos_est(1))
                 error('pos_est is NaN')
             end
 
@@ -331,7 +352,7 @@ classdef DiffBot < handle
                             [~,indx]=min(candidates_args);
                             indx=candidates(indx);
                             if ~isempty(indx)
-                                rads_meas(i) = tmp1(1,indx(1));
+                                rads_meas(i) = min(tmp1(1,indx(1)),obj.Rs);
 
                                 % if obst_with_unc(1,indx) <= rads(i)
                                 %     %rads2(i) = obst_with_unc(1,indx(1));
