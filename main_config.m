@@ -6,6 +6,7 @@ n_pointxm = 2000;       % point x meter in obstacles generation
 n_lidar = 360 ;         % n of ray in 2*pi rad of lidar sensing range
 
 environment = 1;        % 1,2,3 for different environments (4 no obstacles)
+lidar_rad_std = 0.05;
 
 %% SIMULATION INIT
 t=0;                    % time t [s] init

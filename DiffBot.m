@@ -56,12 +56,13 @@ classdef DiffBot < handle
         rho_i_D
         u_clip
         w_clip
+        lidar_n
     end
 
     methods
         function obj = DiffBot(dt,sizee,rs,bot_r, id,d_p,rb_init,obs,...
                 g_n,m_n,mag_n,gains_ddr,gr_s,phi_max,n_verts, ...
-                target_pos,ki,rho_i_init,rho_iD,u_clip,w_clip)
+                target_pos,ki,rho_i_init,rho_iD,u_clip,w_clip,lidar_noise)
             obj.dt = dt;
             obj.sizes = sizee;
             obj.noise_model_std = m_n;
@@ -106,6 +107,8 @@ classdef DiffBot < handle
             % Velocity clip
             obj.u_clip = u_clip;
             obj.w_clip = w_clip;
+
+            obj.lidar_n = lidar_noise;
             
         end
 
@@ -305,15 +308,15 @@ classdef DiffBot < handle
             rads2=rads;
             
             if size(obj.obsts_lidar,2)>1
-                obj.obsts_lidar(1,:) = obj.obsts_lidar(1,:) + 1*0.05*randn(1,size(obj.obsts_lidar,2));
+                obj.obsts_lidar(1,:) = obj.obsts_lidar(1,:) + obj.lidar_n*randn(1,size(obj.obsts_lidar,2));
                 obj.obsts_lidar(2,:) = obj.obsts_lidar(2,:) - obj.pos(3);
                 obj.obsts_lidar(2,:) = adjust_angle(obj.obsts_lidar(2,:));
                 % cart_obst = [cos(obj.pos_est(3)) -sin(obj.pos_est(3)); sin(obj.pos_est(3))  cos(obj.pos_est(3))]*polar2cartesian(obj.obsts_lidar,[0;0]) + obj.pos_est(1:2); 
                 % cart_obst = cartesian2polar(cart_obst,obj.pos_est(1:2));
                 main_config
-                tmp= regr_scan(obj.obsts_lidar,obj.pos_est(1:2),0.25);
+                tmp= regr_scan(obj.obsts_lidar,obj.pos_est(1:2),5*obj.lidar_n);
                 tmp1 = inflate(tmp,0,obj.pos_est(1:2));
-                tmp=inflate(tmp,obj.uncertainty+obj.bot_dim+3.*0.05,obj.pos_est(1:2));
+                tmp=inflate(tmp,obj.uncertainty+obj.bot_dim+3.*obj.lidar_n,obj.pos_est(1:2));
                 tmp1=cartesian2polar(horzcat(tmp1{:}),obj.pos_est(1:2));
                 %tmp1(2,:) = adjust_angle(tmp1(2,:));
                 tmp=horzcat(tmp{:});
@@ -324,7 +327,7 @@ classdef DiffBot < handle
                 inf=tmp;
                 inf0=tmp1;
                 if ~isempty(tmp) 
-                    if isempty(find(tmp(1,:)<obj.uncertainty+obj.bot_dim+3*0.05,1))
+                    if isempty(find(tmp(1,:)<obj.uncertainty+obj.bot_dim+3*obj.lidar_n,1))
                         obst_with_unc = tmp;
                     else
                         % obst_with_unc = obj.obsts_lidar;
