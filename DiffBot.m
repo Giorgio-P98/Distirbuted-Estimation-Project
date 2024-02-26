@@ -57,6 +57,7 @@ classdef DiffBot < handle
         u_clip
         w_clip
         lidar_n
+        indexconc = [];
     end
 
     methods
@@ -213,10 +214,9 @@ classdef DiffBot < handle
 
         function plot_bot(obj)
             text(obj.pos_est(1),obj.pos_est(2),string(obj.id))
-            %%plot(obj.pos(1),obj.pos(2),'.',MarkerSize=10)
-            %%plot(obj.verts(1,:),obj.verts(2,:))
-            % plot([obj.verts_unc(1,:),obj.verts_unc(1,1)],[obj.verts_unc(2,:),obj.verts_unc(2,1)])
-            plot([obj.verts_meas(1,:),obj.verts_meas(1,1)],[obj.verts_meas(2,:),obj.verts_meas(2,1)])
+            %plot(obj.pos(1),obj.pos(2),'.',MarkerSize=10)
+            %plot(obj.verts(1,:),obj.verts(2,:))
+            %plot([obj.verts_meas(1,:),obj.verts_meas(1,1)],[obj.verts_meas(2,:),obj.verts_meas(2,1)])
             %verts_uncc=inv([cos(obj.pos_est(3)) -sin(obj.pos_est(3)); sin(obj.pos_est(3))  cos(obj.pos_est(3))])*(obj.verts_unc-obj.pos_est(1:2)) + obj.pos_est(1:2);
             %verts_zii=inv([cos(obj.pos_est(3)) -sin(obj.pos_est(3)); sin(obj.pos_est(3))  cos(obj.pos_est(3))])*(obj.verts_zi-obj.pos_est(1:2)) + obj.pos_est(1:2);
             plot([obj.verts_unc(1,:),obj.verts_unc(1,1)],[obj.verts_unc(2,:),obj.verts_unc(2,1)])
@@ -409,6 +409,7 @@ classdef DiffBot < handle
                 poly1 = polyshape(obj.verts_unc(1,:),obj.verts_unc(2,:));
                 safety_set = subtract(poly1,union(cell_mat));
                 obj.verts_zi = safety_set.Vertices';
+                obj.indexconc = n_convI;
             else
                 obj.verts_zi = obj.verts_unc;
             end

@@ -6,7 +6,7 @@ n_pointxm = 2000;       % point x meter in obstacles generation
 n_lidar = 360 ;         % n of ray in 2*pi rad of lidar sensing range
 
 environment = 1;        % 1,2,3 for different environments (4 no obstacles)
-lidar_rad_std = 0.05;
+
 
 %% SIMULATION INIT
 t=0;                    % time t [s] init
@@ -14,7 +14,7 @@ i=0;                    % i var init for plot only at certain step
 sim_t = 50;             % simulation time [s]
 dt = 0.1;               % time step [s]
 n_r = 5;                % Number of Agents
-rs = 4;                 % Maximum Lidar measurements range
+rs = 4.5;                 % Maximum Lidar measurements range
 Rr = 0.25;              % Agents incumbrance radius
 explored = 0;           % Explored fraction of total
 explor_limit = 0.95;    % Environment is fully explored
@@ -33,7 +33,8 @@ robot_init = [s-50 0]+[48 9; 45 9; 42 9; 48 12; 45 12; 42 12; 45 15];
 % Simulation noises
 gps_n = 0.5;           % gps noise standard deviation
 model_n = 0.1;         % model noise standard deviation
-mag_n = 2;           % magnetometer noise standard deviation
+mag_n = 2;             % magnetometer noise standard deviation
+lidar_rad_std = 0.05;  % lidar radial noise std
 
 % Point dynamic gain
 kp = 8.0;               % proprotional control velocity gain
@@ -43,8 +44,8 @@ kg = 7.0;
 kl = 1.5;
 
 % general gain
-kd = 0.8;               % dynamics set update mesh_map(Phi) gain
-ku = 0.1;               % visited set update mesh_map(Phi) gain
+kd = 0.8;              % dynamics set update mesh_map(Phi) gain
+ku = 0.1;              % visited set update mesh_map(Phi) gain
 k0 = 0.0;              % dynamics of the cell radius gain (decrease rate) 0.05
 k1 = 0.0;              % dynamics of the cell radius gain (increase rate) 0.95
 
