@@ -110,6 +110,8 @@ classdef DiffBot < handle
             obj.w_clip = w_clip;
 
             obj.lidar_n = lidar_noise;
+
+            main_config
             
         end
 
@@ -308,30 +310,30 @@ classdef DiffBot < handle
             rads2=rads;
             
             if size(obj.obsts_lidar,2)>1
+                obst_clean = obj.obsts_lidar;
+                obst_clean(2,:) = adjust_angle(obst_clean(2,:) - obj.pos(3) );
                 obj.obsts_lidar(1,:) = obj.obsts_lidar(1,:) + obj.lidar_n*randn(1,size(obj.obsts_lidar,2));
                 obj.obsts_lidar(2,:) = obj.obsts_lidar(2,:) - obj.pos(3);
                 obj.obsts_lidar(2,:) = adjust_angle(obj.obsts_lidar(2,:));
                 % cart_obst = [cos(obj.pos_est(3)) -sin(obj.pos_est(3)); sin(obj.pos_est(3))  cos(obj.pos_est(3))]*polar2cartesian(obj.obsts_lidar,[0;0]) + obj.pos_est(1:2); 
                 % cart_obst = cartesian2polar(cart_obst,obj.pos_est(1:2));
-                main_config
+                obst_with_unc = [];
+                
                 tmp= regr_scan(obj.obsts_lidar,obj.pos_est(1:2),5*obj.lidar_n);
-                tmp1 = inflate(tmp,0,obj.pos_est(1:2));
-                tmp=inflate(tmp,obj.uncertainty+obj.bot_dim+3.*obj.lidar_n,obj.pos_est(1:2));
-                tmp1=cartesian2polar(horzcat(tmp1{:}),obj.pos_est(1:2));
-                %tmp1(2,:) = adjust_angle(tmp1(2,:));
-                tmp=horzcat(tmp{:});
-                tmp = cartesian2polar(tmp,obj.pos_est(1:2));
-                %tmp(2,:) = adjust_angle(tmp(2,:));
-                %tmp(2,:) = tmp(2,:) -obj.pos(3);
-                obst_with_unc = obj.obsts_lidar;
-                inf=tmp;
-                inf0=tmp1;
-                if ~isempty(tmp) 
-                    if isempty(find(tmp(1,:)<obj.uncertainty+obj.bot_dim+3*obj.lidar_n,1))
-                        obst_with_unc = tmp;
+                if ~isempty(tmp)
+                    [~,tmp_infl] = inflate(tmp,obj.uncertainty+obj.bot_dim+3.*obj.lidar_n,obj.pos_est(1:2));
+                    tmp_infl = cartesian2polar(tmp_infl,obj.pos_est(1:2));
+                    
+                
+                    % inf=tmp;
+                    % inf0=tmp0;
+                    if isempty(find(tmp_infl(1,:)<obj.uncertainty+obj.bot_dim+3*obj.lidar_n,1))
+                        obst_with_unc = tmp_infl;
                     else
                         % obst_with_unc = obj.obsts_lidar;
-                        obst_with_unc = tmp1;
+                        [~,tmp0] = inflate(tmp,obj.uncertainty+obj.bot_dim+3.*obj.lidar_n,obj.pos_est(1:2));
+                        tmp0 = cartesian2polar(tmp0,obj.pos_est(1:2));
+                        obst_with_unc = tmp0;
                     end
                 end
                 
@@ -349,13 +351,13 @@ classdef DiffBot < handle
                                     rads(i) = 0.05;
                                 end
                             end
-                            if ~isempty(tmp1)
-                            candidates = find(abs(angles(i)-tmp1(2,:))<0.05);
-                            candidates_args = tmp1(1,candidates);
+                            if ~isempty(obst_clean)
+                            candidates = find(abs(angles(i)-obst_clean(2,:))<0.05);
+                            candidates_args = obst_clean(1,candidates);
                             [~,indx]=min(candidates_args);
                             indx=candidates(indx);
                             if ~isempty(indx)
-                                rads_meas(i) = min(tmp1(1,indx(1)),obj.Rs);
+                                rads_meas(i) = min(obst_clean(1,indx(1)),obj.Rs);
 
                                 % if obst_with_unc(1,indx) <= rads(i)
                                 %     %rads2(i) = obst_with_unc(1,indx(1));
@@ -388,7 +390,7 @@ classdef DiffBot < handle
             %     rads = rads + obj.k1.*(obj.rs - rads)*obj.dt;
             % end
             % obj.r_infl = rads;
-            obj.verts_meas = obj.pos_est(1:2) + rads_meas.*[cos(angles);sin(angles)];
+            obj.verts_meas = obj.pos(1:2) + rads_meas.*[cos(angles);sin(angles)];
             obj.verts_unc = obj.pos_est(1:2) + rads.*[cos(angles);sin(angles)];
             n_convI = convex_verts(obj.verts_unc);
             if ~isempty(n_convI)
