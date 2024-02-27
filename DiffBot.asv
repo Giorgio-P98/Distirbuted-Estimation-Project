@@ -364,22 +364,21 @@ classdef DiffBot < handle
                 % pt_vec = obj.pos_est(1:2) + pt_min.*[cos(angle_pt_min);sin(angle_pt_min)];
                 % dist_bot_obs = obj.pos_est(1:2) - pt_vec;
                 % obst_inflate_pt = pt_vec + 2*(delta_infl - pt_min/2).*dist_bot_obs/pt_min;
-                d_inflate = delta_infl*(1 - 0.7*(pt_min/(obj.Rs - delta_infl)));
+                d_inflate = delt
                 if ~isempty(tmp)
                     [~,tmp_infl] = inflate(tmp,d_inflate,obj.pos_est(1:2));
                     % [~,tmp_infl] = inflate(tmp,obj.uncertainty+obj.bot_dim+3.*obj.lidar_n,obj.pos_est(1:2));
                     tmp_infl = cartesian2polar(tmp_infl,obj.pos_est(1:2));
                     % inf=tmp;
                     % inf0=tmp0;
-                    % if isempty(find(tmp_infl(1,:)<obj.uncertainty+obj.bot_dim+3*obj.lidar_n,1))
-                    %     obst_with_unc = tmp_infl;
-                    % else
-                    %     % obst_with_unc = obj.obsts_lidar;
-                    %     [~,tmp0] = inflate(tmp,0,obj.pos_est(1:2));
-                    %     tmp0 = cartesian2polar(tmp0,obj.pos_est(1:2));
-                    %     obst_with_unc = tmp0;
-                    % end
-                    obst_with_unc = tmp_infl;
+                    if isempty(find(tmp_infl(1,:)<obj.uncertainty+obj.bot_dim+3*obj.lidar_n,1))
+                        obst_with_unc = tmp_infl;
+                    else
+                        % obst_with_unc = obj.obsts_lidar;
+                        [~,tmp0] = inflate(tmp,0,obj.pos_est(1:2));
+                        tmp0 = cartesian2polar(tmp0,obj.pos_est(1:2));
+                        obst_with_unc = tmp0;
+                    end
                 end
                 
                 for i=1:length(angles)
