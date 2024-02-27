@@ -1,4 +1,4 @@
-function index_conv = convex_verts(vertex)
+function index_conv = convex_verts(vertex, conc_th)
 % Given the vertex of a polygon, determine the non convex vertex 
 % Inputs 
 % vertex = array with all the vertex coordinate
@@ -16,14 +16,14 @@ index_conv = [];
 % Check first point
 v1 = [px(1) - px(end), py(1) - py(end)];
 v2 = [px(2) - px(1), py(2) - py(1)];
-if det([v1; v2]) < -0.01
+if det([v1; v2]) < conc_th
     index_conv(end+1) = 1;
 end
 
 for k = 2:l-1
     v1 = v2;
     v2 = [px(k+1) - px(k), py(k+1) - py(k)]; 
-    if det([v1; v2]) < -0.01
+    if det([v1; v2]) < conc_th
         index_conv(end+1) = k;
     end
 end

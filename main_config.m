@@ -14,17 +14,20 @@ i=0;                    % i var init for plot only at certain step
 sim_t = 50;             % simulation time [s]
 dt = 0.1;               % time step [s]
 n_r = 5;                % Number of Agents
-rs = 4.5;                 % Maximum Lidar measurements range
+rs = 3.5;               % Maximum Lidar measurements range
 Rr = 0.25;              % Agents incumbrance radius
 explored = 0;           % Explored fraction of total
 explor_limit = 0.95;    % Environment is fully explored
 
-grid_s = 1.0;           % grid cell dimension (mesh_map)
+grid_s = 0.8;           % grid cell dimension (mesh_map)
 phi_max = 10;           % max value of the mesh_map (initial value)
 n_verts = 41;           % Agents Voronoi cell verts number
 
 % AGENTS POSITION
 defined_pose = true;    % true if want to use pre-defined Agents pos,itions
+
+% Concavity threshold
+conc_th = -0.05;
 
 % modify this vector to specify the birth position of the agents
 robot_init = [s-50 0]+[48 9; 45 9; 42 9; 48 12; 45 12; 42 12; 45 15];
@@ -44,8 +47,8 @@ kg = 7.0;
 kl = 1.5;
 
 % general gain
-kd = 0.8;              % dynamics set update mesh_map(Phi) gain
-ku = 0.1;              % visited set update mesh_map(Phi) gain
+kd = 1.5;              % dynamics set update mesh_map(Phi) gain
+ku = 0.2;              % visited set update mesh_map(Phi) gain
 k0 = 0.0;              % dynamics of the cell radius gain (decrease rate) 0.05
 k1 = 0.0;              % dynamics of the cell radius gain (increase rate) 0.95
 
@@ -62,7 +65,7 @@ w_clip = 1000;
 
 % WANT PLOT?
 want_plot = true;          % true if you want dynamic plots
-plot_step = 3;
+plot_step = 1;
 
 % Environment polyshape
 point_env = [0,0,s+10,s+10;0,s+5,s+5,0];

@@ -57,13 +57,14 @@ classdef DiffBot < handle
         u_clip
         w_clip
         lidar_n
-        indexconc = [];
+        indexconc = []
+        conc_th
     end
 
     methods
         function obj = DiffBot(dt,sizee,rs,bot_r, id,d_p,rb_init,obs,...
-                g_n,m_n,mag_n,gains_ddr,gr_s,phi_max,n_verts, ...
-                target_pos,ki,rho_i_init,rho_iD,u_clip,w_clip,lidar_noise)
+                g_n,m_n,mag_n,gains_ddr,gr_s,phi_max,n_verts, target_pos, ...
+                ki,rho_i_init,rho_iD,u_clip,w_clip,lidar_noise, conc_th)
             obj.dt = dt;
             obj.sizes = sizee;
             obj.noise_model_std = m_n;
@@ -98,6 +99,9 @@ classdef DiffBot < handle
             obj.mesh_map_meas = obj.mesh_map;
 
             obj.Ppred = obj.P;
+
+            % Concavity threshold
+            obj.conc_th = conc_th;
 
             % RENDZVEOUS
             obj.target_pos = target_pos;
@@ -218,11 +222,12 @@ classdef DiffBot < handle
             text(obj.pos_est(1),obj.pos_est(2),string(obj.id))
             %plot(obj.pos(1),obj.pos(2),'.',MarkerSize=10)
             %plot(obj.verts(1,:),obj.verts(2,:))
-            plot([obj.verts_meas(1,:),obj.verts_meas(1,1)],[obj.verts_meas(2,:),obj.verts_meas(2,1)])
             %verts_uncc=inv([cos(obj.pos_est(3)) -sin(obj.pos_est(3)); sin(obj.pos_est(3))  cos(obj.pos_est(3))])*(obj.verts_unc-obj.pos_est(1:2)) + obj.pos_est(1:2);
             %verts_zii=inv([cos(obj.pos_est(3)) -sin(obj.pos_est(3)); sin(obj.pos_est(3))  cos(obj.pos_est(3))])*(obj.verts_zi-obj.pos_est(1:2)) + obj.pos_est(1:2);
             plot([obj.verts_unc(1,:),obj.verts_unc(1,1)],[obj.verts_unc(2,:),obj.verts_unc(2,1)])
             %plot([obj.verts_zi(1,:),obj.verts_zi(1,1)],[obj.verts_zi(2,:),obj.verts_zi(2,1)])
+            %plot([obj.verts_meas(1,:),obj.verts_meas(1,1)],[obj.verts_meas(2,:),obj.verts_meas(2,1)])
+
             %plot([obj.verts_qt(1,:),obj.verts_qt(1,1)],[obj.verts_qt(2,:),obj.verts_qt(2,1)])
             plot_unc(obj)
             plot_disk(obj.pos(1),obj.pos(2),obj.bot_dim);
@@ -402,7 +407,7 @@ classdef DiffBot < handle
             % obj.r_infl = rads;
             obj.verts_meas = obj.pos(1:2) + rads_meas.*[cos(angles_meas);sin(angles_meas)];
             obj.verts_unc = obj.pos_est(1:2) + rads.*[cos(angles);sin(angles)];
-            n_convI = convex_verts(obj.verts_unc);
+            n_convI = convex_verts(obj.verts_unc, obj.conc_th);
             if ~isempty(n_convI)
                 start_pt = obj.pos_est(1:2)+ rads(n_convI).*[cos(angles(n_convI));sin(angles(n_convI))];
                 pt1 = start_pt + 2*obj.rs*[cos(angles(n_convI) + pi/2);sin(angles(n_convI) + pi/2)];

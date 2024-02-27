@@ -91,8 +91,8 @@ tot_area = area(env_w_obs);
 
 for j=1:n_r
      bots(j) = DiffBot(dt,s,rs,Rr,j,defined_pose,robot_init,union(P), ...
-         gps_n,model_n,mag_n,gains_ddr,grid_s,phi_max,n_verts, ...
-         target_pos,ki,rho_i_init,rho_iD,u_clip,w_clip,lidar_rad_std);
+         gps_n,model_n,mag_n,gains_ddr,grid_s,phi_max,n_verts,target_pos, ...
+         ki,rho_i_init,rho_iD,u_clip,w_clip,lidar_rad_std,conc_th);
 end
 
 % Algoritm initialization
