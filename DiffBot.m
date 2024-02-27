@@ -222,7 +222,7 @@ classdef DiffBot < handle
             %verts_uncc=inv([cos(obj.pos_est(3)) -sin(obj.pos_est(3)); sin(obj.pos_est(3))  cos(obj.pos_est(3))])*(obj.verts_unc-obj.pos_est(1:2)) + obj.pos_est(1:2);
             %verts_zii=inv([cos(obj.pos_est(3)) -sin(obj.pos_est(3)); sin(obj.pos_est(3))  cos(obj.pos_est(3))])*(obj.verts_zi-obj.pos_est(1:2)) + obj.pos_est(1:2);
             plot([obj.verts_unc(1,:),obj.verts_unc(1,1)],[obj.verts_unc(2,:),obj.verts_unc(2,1)])
-            plot([obj.verts_zi(1,:),obj.verts_zi(1,1)],[obj.verts_zi(2,:),obj.verts_zi(2,1)])
+            %plot([obj.verts_zi(1,:),obj.verts_zi(1,1)],[obj.verts_zi(2,:),obj.verts_zi(2,1)])
             %plot([obj.verts_qt(1,:),obj.verts_qt(1,1)],[obj.verts_qt(2,:),obj.verts_qt(2,1)])
             plot_unc(obj)
             plot_disk(obj.pos(1),obj.pos(2),obj.bot_dim);
@@ -277,17 +277,30 @@ classdef DiffBot < handle
             while j <= obj.steps_vert
                 v_cand = rs_.*[cos(th);sin(th)];
                 k = 1;
-                for i = 1:size(obj.neighbours,2)  
-                    if logical(k)
-                        if norm(v_cand)+ 0*obj.bot_dim + 0*dist_safe + 0*obj.neighbours_unc(i) < norm(obj.pos_est(1:2) + v_cand - obj.neighbours(1:2,i))
-                            k = and(k,1);
-                        else
-                            k = and(k,0);
+                for i = 1:size(obj.neighbours,2)
+                    deltaij = 2*obj.bot_dim + obj.uncertainty + obj.neighbours_unc(i);
+                    distance_ij = obj.pos_est(1:2) - obj.neighbours(1:2,i);
+                    if deltaij <= norm(distance_ij)/2 
+                        if k
+                            if norm(v_cand) < norm(obj.pos_est(1:2) + v_cand - obj.neighbours(1:2,i))
+                                k = and(k,1);
+                            else
+                                k = and(k,0);
+                            end
+                        end
+                    else
+                        if k
+                            neighbour_tilda = obj.neighbours(1:2,i) + 2*(deltaij - norm(distance_ij)/2).*distance_ij/norm(distance_ij);
+                            if norm(v_cand) < norm(obj.pos_est(1:2) + v_cand - neighbour_tilda)
+                                k = and(k,1);
+                            else
+                                k = and(k,0);
+                            end
                         end
                     end
                 end
                 if k
-                    rads(j)= rs_ -obj.bot_dim - dist_safe;
+                    rads(j)= rs_ ;%-obj.bot_dim - dist_safe;
                     if rads(j) <= 0
                        rads(j) = 0.05;
                     end

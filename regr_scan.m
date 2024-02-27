@@ -47,7 +47,7 @@ function res = regr_scan(scan,pos,epsilon)
             else
                 mend = [ones(length(res{end}(2,:)),1),res{end}(1,:)']\res{end}(2,:)'; 
             end
-            if abs(m1(1)-mend(1)) < 0.2 && norm(res{1}(:,1)-res{end}(:,end))<0.2
+            if abs(m1(1)-mend(1)) < 0.6 && norm(res{1}(:,1)-res{end}(:,end))<0.3
                 res{1} = [res{end},res{1}];
                 res(end) = [];
             end
