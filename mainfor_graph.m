@@ -20,13 +20,6 @@ if environment == 1
     obs6 = [5;0]+[-3;0]+[s/3+w_t,s/3+w_t,s/5,s/5,s/3,s/3;s,2*s/3,2*s/3,2*s/3+w_t,2*s/3+w_t,s];
     obs7 = [5;0]+[0,s/3,s/3,0;s/3+w_t,s/3+w_t,s/3,s/3];
     obsall = {obs1,obs2,obs3,obs4,obs5,obs6,obs7};
-    obstacles{1} = build_obst(obs1,n_pointxm);
-    obstacles{2} = build_obst(obs2,n_pointxm);
-    obstacles{3} = build_obst(obs3,n_pointxm);
-    obstacles{4} = build_obst(obs4,n_pointxm);
-    obstacles{5} = build_obst(obs5,n_pointxm);
-    obstacles{6} = build_obst(obs6,n_pointxm);
-    obstacles{7} = build_obst(obs7,n_pointxm);
 end
 
 for i=1:n_obs
@@ -42,24 +35,25 @@ env_w_obs = subtract(env,all_obs);
 tot_area = area(env_w_obs);
 
 %% SIMULATION
-max_bot = 1;
-max_sim = 1;
+max_bot = 5;
+max_sim = 10;
 
 elpsed_time_mat = zeros(max_bot,max_sim);
 
 %SIMULATION
 tic
-for n_r = 1:max_bot
+for n_r = 5:max_bot
     for n_sim = 1:max_sim
         for j=1:n_r
-            bots(j) = DiffBot(dt,s,rs,Rr,j,defined_pose,robot_init,union(P), ...
-                gps_n,model_n,mag_n,gains_ddr,grid_s,phi_max,n_verts, ... 
-                target_pos,ki,rho_i_init,rho_iD,u_clip,w_clip);
+            bots(j) = DiffBot(dt,s,rs,Rr,j,defined_pose,robot_init, ...
+                union(P),gps_n,model_n,mag_n,gains_ddr,grid_s,phi_max, ...
+                n_verts,target_pos,ki,rho_i_init,rho_iD,u_clip,w_clip, ...
+                lidar_rad_std,conc_th);
         end
         
         % Algoritm initialization
         bots=update_neighbours(bots, all_obs); clc;
-        bots=update_obstacles(obstacles,bots,n_lidar);
+        bots=update_obstacles(all_obs,bots,n_lidar,n_pointxm_meas);
         iterate(bots,@vertex_unc2);
         iterate(bots,@qt_qtnosi_update);
         iterate(bots,@update_phi)
@@ -71,7 +65,7 @@ for n_r = 1:max_bot
             end
             iterate(bots,@control_and_estimate);
             bots=update_neighbours(bots, all_obs);
-            bots=update_obstacles(obstacles,bots,n_lidar);
+            bots=update_obstacles(all_obs,bots,n_lidar,n_pointxm_meas);
             iterate(bots,@vertex_unc2);
             warning('off')
             iterate(bots,@qt_qtnosi_update);
@@ -86,7 +80,9 @@ for n_r = 1:max_bot
             end
             
             % "Until now" explored map
-            explored = explored_plot(bots,n_r, all_obs,s, 3, tot_area,i);
+            if t > 30
+                explored = explored_plot(bots,n_r, all_obs,s, 3, tot_area,i);
+            end
             clc
             disp('number of bots : '+string(n_r))
             disp('simulation number: '+string(n_sim))
@@ -108,8 +104,6 @@ for n_r = 1:max_bot
         i = 0;
         t = 0;
         explored = 0;
-    end
-    
-    
+    end    
 end
 toc

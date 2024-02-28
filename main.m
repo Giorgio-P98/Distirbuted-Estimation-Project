@@ -20,13 +20,6 @@ if environment == 1
     obs6 = [5;0]+[-3;0]+[s/3+w_t,s/3+w_t,s/5,s/5,s/3,s/3;s,2*s/3,2*s/3,2*s/3+w_t,2*s/3+w_t,s];
     obs7 = [5;0]+[0,s/3,s/3,0;s/3+w_t,s/3+w_t,s/3,s/3];
     obsall = {obs1,obs2,obs3,obs4,obs5,obs6,obs7};
-    obstacles{1} = build_obst(obs1,n_pointxm);
-    obstacles{2} = build_obst(obs2,n_pointxm);
-    obstacles{3} = build_obst(obs3,n_pointxm);
-    obstacles{4} = build_obst(obs4,n_pointxm);
-    obstacles{5} = build_obst(obs5,n_pointxm);
-    obstacles{6} = build_obst(obs6,n_pointxm);
-    obstacles{7} = build_obst(obs7,n_pointxm);
 elseif environment == 2
     % Environment Two
     door = 6;
@@ -40,11 +33,6 @@ elseif environment == 2
     obs4 = [5;0]+[s/3+door,2*s/3+w_t,2*s/3+w_t,2*s/3,2*s/3,s/3+door;s/3,s/3,5,5,s/3-w_t,s/3-w_t];
     obs5 = [5;0]+[0;s/3+corridor]+[0,0,2*s/3+w_t,2*s/3+w_t,s/3+w_t + door/2,s/3+w_t + door/2,2*s/3,2*s/3,w_t,w_t,s/3+w_t - door/2,s/3+w_t - door/2;5,s/3,s/3,5,5,5+w_t,5+w_t,s/3-w_t,s/3-w_t,5+w_t,5+w_t,5];
     obsall = {obs1,obs2,obs3,obs4,obs5};
-    obstacles{1} = build_obst(obs1,n_pointxm);
-    obstacles{2} = build_obst(obs2,n_pointxm);
-    obstacles{3} = build_obst(obs3,n_pointxm);
-    obstacles{4} = build_obst(obs4,n_pointxm);
-    obstacles{5} = build_obst(obs5,n_pointxm);
 elseif environment == 3
     % Environment 3 
     n_obs = 4;
@@ -55,10 +43,6 @@ elseif environment == 3
     obs3 = [5;0]+[0.15*s,0.3*s,0.45*s,0.5*s,0.3*s;0.2*s,0.2*s,0.3*s,0.6*s,0.9*s];
     obs4 = [5;0]+[0.6*s,0.8*s,0.8*s,0.6*s;0.5*s,0.5*s,0.8*s,0.8*s];
     obsall = {obs1,obs2,obs3,obs4};
-    obstacles{1} = build_obst(obs1,n_pointxm);
-    obstacles{2} = build_obst(obs2,n_pointxm);
-    obstacles{3} = build_obst(obs3,n_pointxm);
-    obstacles{4} = build_obst(obs4,n_pointxm);
 elseif environment == 4
     % Environment 4 (no obstacles)
     n_obs = 2;
@@ -67,8 +51,6 @@ elseif environment == 4
     obs1 = [5;0]+[0,0,s,s,s+5,s+5,-5,-5;5,s,s,5,5,s+5,s+5,5];
     obs2 = [5;0]+[-5,s+5,s+5,-5;5,5,0,0];
     obsall = {obs1,obs2};
-    obstacles{1} = build_obst(obs1,n_pointxm);
-    obstacles{2} = build_obst(obs2,n_pointxm);
 else
     disp('There are maximum 4 Environment');
 end
@@ -97,7 +79,7 @@ end
 
 % Algoritm initialization
 bots=update_neighbours(bots, all_obs); clc;
-bots=update_obstacles(obstacles,bots,n_lidar);
+bots=update_obstacles(all_obs,bots,n_lidar,n_pointxm_meas);
 iterate(bots,@vertex_unc2);
 iterate(bots,@qt_qtnosi_update);
 if REND
@@ -129,14 +111,14 @@ end
 
 %SIMULATION
 tic
-% while(t<sim_t)
-while(explored < 0.95)
+while(t<sim_t)
+% while(explored < 0.95)
     if REND
         iterate(bots,@check_object_presence);
     end
     iterate(bots,@control_and_estimate);
     bots=update_neighbours(bots, all_obs);
-    bots=update_obstacles(obstacles,bots,n_lidar);
+    bots=update_obstacles(all_obs,bots,n_lidar,n_pointxm_meas);
     iterate(bots,@vertex_unc2);
     warning('off')
     iterate(bots,@qt_qtnosi_update);
@@ -182,7 +164,9 @@ while(explored < 0.95)
         % bots(1).P
     end
     % "Until now" explored map
-    explored = explored_plot(bots,n_r, all_obs,s, 3, tot_area,i);
+    if t > 30
+        explored = explored_plot(bots,n_r, all_obs,s, 3, tot_area,i);
+    end
     % if mod(i,10) == 0
     clc
     disp('explored area: '+string(round(explored*100,2))+' %')
@@ -191,9 +175,9 @@ while(explored < 0.95)
     % sim step increment
     i = i+1;
     t = t+dt;
-    if explored >0.94
-        explored=0;
-    end
+    % if explored >0.94
+    %     explored=0;
+    % end
 end
 %clc
 disp('explored area: '+string(round(explored*100,2))+' %')

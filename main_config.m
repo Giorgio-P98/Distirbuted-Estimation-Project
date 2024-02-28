@@ -1,7 +1,8 @@
 %% ENVIRONMENT CONSTRUCTION
 w_t = 1.5;              % environment wall thickness
 s = 50;                 % x-y map dimension [s[m]; s[m]]
-n_pointxm = 2000;       % point x meter in obstacles generation
+n_pointxm = 1000;          % point x meter in obstacles generation
+n_pointxm_meas = 2000;       % point x meter in obstacles generation when detected
 
 n_lidar = 360 ;         % n of ray in 2*pi rad of lidar sensing range
 
@@ -11,7 +12,7 @@ environment = 1;        % 1,2,3 for different environments (4 no obstacles)
 %% SIMULATION INIT
 t=0;                    % time t [s] init
 i=0;                    % i var init for plot only at certain step
-sim_t = 50;             % simulation time [s]
+sim_t = 30;             % simulation time [s]
 dt = 0.1;               % time step [s]
 n_r = 5;                % Number of Agents
 rs = 4.0;               % Maximum Lidar measurements range
@@ -48,7 +49,7 @@ kl = 1.5;
 
 % general gain
 kd = 1.8;              % dynamics set update mesh_map(Phi) gain
-ku = 0.2;              % visited set update mesh_map(Phi) gain
+ku = 0.25;              % visited set update mesh_map(Phi) gain
 k0 = 0.0;              % dynamics of the cell radius gain (decrease rate) 0.05
 k1 = 0.0;              % dynamics of the cell radius gain (increase rate) 0.95
 

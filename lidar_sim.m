@@ -48,16 +48,23 @@ obst=[];
 obsts=[];
 scansion=[];
 
-for j=1:length(obstacles)
-    norms = vecnorm(sensor_pos - obstacles{j});
-    indx = norms <=rs;
-    obst = [obst,obstacles{j}(:,indx)];
-    % for k=1:length(norms)
-    %     if norms(k) <= rs
-    %         obst(:,end+1) = obstacles{j}(:,k);
-    %     end
-    % end
-    
+% for j=1:length(obstacles)
+%     norms = vecnorm(sensor_pos - obstacles{j});
+%     indx = norms <=rs;
+%     obst = [obst,obstacles{j}(:,indx)];
+%     % for k=1:length(norms)
+%     %     if norms(k) <= rs
+%     %         obst(:,end+1) = obstacles{j}(:,k);
+%     %     end
+%     % end
+% 
+% end
+if ~isempty(obstacles{1})
+    for j=1:length(obstacles)
+        norms = vecnorm(sensor_pos - obstacles{j});
+        indx = norms <=rs;
+        obst = [obst,obstacles{j}(:,indx)];
+    end
 end
 
 if ~isempty(obst)

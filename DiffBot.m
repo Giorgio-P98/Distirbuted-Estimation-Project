@@ -293,7 +293,7 @@ classdef DiffBot < handle
                 %     end
                 % end
                 for i = 1:size(obj.neighbours,2)
-                    deltaij = 2*obj.bot_dim + obj.uncertainty + obj.neighbours_unc(i);
+                    deltaij = 2*obj.bot_dim + dist_safe + obj.neighbours_unc(i);
                     distance_ij = obj.pos_est(1:2) - obj.neighbours(1:2,i);
                     if deltaij <= norm(distance_ij)/2 
                         if k
@@ -360,18 +360,18 @@ classdef DiffBot < handle
                 tmp = regr_scan(obj.obsts_lidar,obj.pos_est(1:2),5*obj.lidar_n);
                 [pt_min,~] = min(obj.obsts_lidar(1,:));
                 % angle_pt_min = obj.obsts_lidar(2,ind_pt_min);
-                delta_infl = obj.uncertainty + obj.bot_dim + 3.*obj.lidar_n;
+                delta_infl = dist_safe + obj.bot_dim + 3.*obj.lidar_n;
                 % pt_vec = obj.pos_est(1:2) + pt_min.*[cos(angle_pt_min);sin(angle_pt_min)];
                 % dist_bot_obs = obj.pos_est(1:2) - pt_vec;
                 % obst_inflate_pt = pt_vec + 2*(delta_infl - pt_min/2).*dist_bot_obs/pt_min;
-                d_inflate = delta_infl*(1 - 0.7*(pt_min/(obj.Rs - delta_infl)));
+                d_inflate = delta_infl*(1 - 0.8*(pt_min/(obj.Rs - delta_infl)));
                 if ~isempty(tmp)
                     [~,tmp_infl] = inflate(tmp,d_inflate,obj.pos_est(1:2));
-                    % [~,tmp_infl] = inflate(tmp,obj.uncertainty+obj.bot_dim+3.*obj.lidar_n,obj.pos_est(1:2));
+                    % [~,tmp_infl] = inflate(tmp,dist_safe+obj.bot_dim+3.*obj.lidar_n,obj.pos_est(1:2));
                     tmp_infl = cartesian2polar(tmp_infl,obj.pos_est(1:2));
                     % inf=tmp;
                     % inf0=tmp0;
-                    % if isempty(find(tmp_infl(1,:)<obj.uncertainty+obj.bot_dim+3*obj.lidar_n,1))
+                    % if isempty(find(tmp_infl(1,:)<dist_safe+obj.bot_dim+3*obj.lidar_n,1))
                     %     obst_with_unc = tmp_infl;
                     % else
                     %     % obst_with_unc = obj.obsts_lidar;
