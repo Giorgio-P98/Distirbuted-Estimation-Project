@@ -164,7 +164,7 @@ while(t<sim_t)
         % bots(1).P
     end
     % "Until now" explored map
-    if t > 30
+    if t>sim_t
         explored = explored_plot(bots,n_r, all_obs,s, 3, tot_area,i);
     end
     % if mod(i,10) == 0

@@ -1,32 +1,50 @@
 clc,close all
-x0 = [0;0;0];
+x0 = [0;0;pi/2];
 x=x0;
-goal = [-50;20];
-dt = 0.1;
+goal = [-5+10*rand(1);-5+10*rand(1)];
+%goal = [3;-4];
+dt = 0.01;
 noise = 0;
 states = x;
 v_hist=[];
 w_hist=[];
 kg=3;
-kl=1.5;
+kl=0.;
 p = nsidedpoly(3, 'Center', [0 ,0], 'SideLength', 4);
-figure 
-hold on
-plot([x(1),x(1)+5.*cos(x(3))],[x(2),x(2)+5.*sin(x(3))])
-plot(p)
-plot(goal(1,:),goal(2,:),'ro')
-xlim([-max(abs(goal))-5 max(abs(goal))]+3)
-ylim([-max(abs(goal))-5 max(abs(goal))]+3)
-drawnow
-pause(0.2);
-hold off
+% figure 
+% hold on
+% plot([x(1),x(1)+5.*cos(x(3))],[x(2),x(2)+5.*sin(x(3))])
+% plot(p)
+% plot(goal(1,:),goal(2,:),'ro')
+% xlim([-max(abs(goal))-5 max(abs(goal))]+3)
+% ylim([-max(abs(goal))-5 max(abs(goal))]+3)
+% drawnow
+% pause(0.2);
+% hold off
 
-while true %norm(x(1:2)-goal) > 0.1
+states_full = {};
+goals={};
+goals{1} = [-1.5;1.5];
+goals{2} = [1.5;1.5];
+goals{3} = [1.5;-1.5];
+goals{4} = [-1.5;-1.5];
+goals{5} = [-1.5;0];
+goals{6} = [1.5;0];
+goals{7} = [-0.;-1.5];
+
+for i=1:length(goals)
+    %goal = [-2+4*rand(1);-2+4*rand(1)];
+    goal = goals{i};
+    states = [];
+    states = x0;
+    x=x0;
+while norm(x(1:2)-goal) > 0.02
     e_k = norm(goal - x(1:2));
-    th_k = atan2(goal(2)-x(2),goal(1)-x(1));
+    th_k = adjust_angle(atan2(goal(2)-x(2),goal(1)-x(1)));
+    
     %th_k(th_k<0) = th_k + 2*pi;
     v = kg.*cos(th_k - x(3)).*e_k;
-    w = 2.*kg.*sin(th_k - x(3)).*cos(th_k - x(3)) + kl .* (th_k -x(3));
+    w = 2.*kg.*sin(th_k - x(3))+ kl .* (th_k -x(3));
     x=x + [v.*dt.*cos(x(3)+w.*dt./2);
                            v.*dt.*sin(x(3)+w.*dt./2);
                            w.*dt] + noise.*randn(3,1);
@@ -34,23 +52,65 @@ while true %norm(x(1:2)-goal) > 0.1
     v_hist=[v_hist,v];
     w_hist=[w_hist,w];
 
-    clf, hold on
-    xlim([-max(abs(goal))-5 max(abs(goal))]+3)
-    ylim([-max(abs(goal))-5 max(abs(goal))]+3)
-    p = nsidedpoly(3, 'Center', x(1:2)', 'SideLength', 4);
-    p=rotate(p,(x(3)-pi/2)*180/pi,x(1:2)');
-    plot(goal(1,:),goal(2,:),'ro')
-    plot([x(1),x(1)+5.*cos(x(3))],[x(2),x(2)+5.*sin(x(3))])
-    plot(p)
-    drawnow
-    pause(0.3);
-    hold off
-    
+    % clf, hold on
+    % xlim([-max(abs(goal))-5 max(abs(goal))]+3)
+    % ylim([-max(abs(goal))-5 max(abs(goal))]+3)
+    % p = nsidedpoly(3, 'Center', x(1:2)', 'SideLength', 0.5);
+    % p=rotate(p,(x(3)-pi/2)*180/pi,x(1:2)');
+    % plot(goal(1,:),goal(2,:),'ro')
+    % plot([x(1),x(1)+0.15.*cos(x(3))],[x(2),x(2)+0.15.*sin(x(3))])
+    % plot(p)
+    % drawnow
+    % pause(0.003);
+    % hold off
+
 
 
 end
+states_full{i} = states;
+end
+
+figure 
+hold on 
+axis equal
+
+rectangle('Position',[-0.25 -0.25 0.5 0.5],'Curvature',[1 1],'EdgeColor','black')
+plot([0,0],[0,0.25],'Color','black')
+for i=1:length(goals)
+    plot(goals{i}(1),goals{i}(2),'or')
+end
+for i=1:length(goals)
+    plot(states_full{i}(1,:),states_full{i}(2,:))
+end
+%%
 % plot(p)
 % figure
 % plot(states(1,:),states(2,:),'Marker','*')
-% figure
-% plot(states(3,:),'.')
+figure
+plot(states(3,:)*180/pi,'.')
+%%
+figure 
+hold on 
+axis equal
+
+% 
+% rectangle('Position',[-0.25 -0.25 0.5 0.5],'Curvature',[1 1],'EdgeColor','black')
+% plot([0,0],[0,0.25],'Color','black')
+p = nsidedpoly(100, 'Center', x0(1:2)', 'SideLength', 0.01);
+p=rotate(p,(x0(3)-pi/2)*180/pi,x0(1:2)');
+plot(p,'FaceColor','[0,1,0.5]')
+plot([x0(1),x0(1)+0.16.*cos(x0(3))],[x0(2),x0(2)+0.16.*sin(x0(3))],'Color','black',LineWidth=3)
+for i=1:length(goals)
+    plot(goals{i}(1),goals{i}(2),'or')
+end
+for i=1:length(goals)
+    
+    plot(states_full{i}(1,:),states_full{i}(2,:))
+    p = nsidedpoly(100, 'Center', states_full{i}(1:2,end)', 'SideLength', 0.01);
+    p=rotate(p,(states_full{i}(3,end)-pi/2)*180/pi,states_full{i}(1:2,end)');
+    plot(p,'FaceColor','[0,1,0.5]')
+    plot([states_full{i}(1,end),states_full{i}(1,end)+0.16.*cos(states_full{i}(3,end))],[states_full{i}(2,end),states_full{i}(2,end)+0.16.*sin(states_full{i}(3,end))],'Color','black',LineWidth=2)
+end
+
+
+

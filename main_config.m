@@ -12,7 +12,7 @@ environment = 1;        % 1,2,3 for different environments (4 no obstacles)
 %% SIMULATION INIT
 t=0;                    % time t [s] init
 i=0;                    % i var init for plot only at certain step
-sim_t = 30;             % simulation time [s]
+sim_t = 150;             % simulation time [s]
 dt = 0.1;               % time step [s]
 n_r = 5;                % Number of Agents
 rs = 4.0;               % Maximum Lidar measurements range
@@ -43,19 +43,17 @@ lidar_rad_std = 0.05;  % lidar radial noise std
 % Point dynamic gain
 kp = 8.0;               % proprotional control velocity gain
 
-% Differential Dynamic gains
-kg = 7.0;
-kl = 1.5;
-
+% Differential Dynamic gain
+kg = 3;
 % general gain
-kd = 1.8;              % dynamics set update mesh_map(Phi) gain
+kd = 1.3;              % dynamics set update mesh_map(Phi) gain
 ku = 0.25;              % visited set update mesh_map(Phi) gain
 k0 = 0.0;              % dynamics of the cell radius gain (decrease rate) 0.05
 k1 = 0.0;              % dynamics of the cell radius gain (increase rate) 0.95
 
 gains = {kp,kd,ku,k0,k1};
 % gains_ddr = {kg,kl,kd,ku,k0,k1};
-gains_ddr = {kg,kl,kd,ku};
+gains_ddr = {kg,kd,ku};
 
 % centroid update frequency
 centroid_step = 1;      % every centroi_step, the centroid is updated 
@@ -66,7 +64,7 @@ w_clip = 1000;
 
 % WANT PLOT?
 want_plot = true;          % true if you want dynamic plots
-plot_step = 1;
+plot_step = 3;
 
 % Environment polyshape
 point_env = [0,0,s+10,s+10;0,s+5,s+5,0];
