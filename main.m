@@ -168,7 +168,7 @@ while(t<sim_t)
         explored = explored_plot(bots,n_r, all_obs,s, 3, tot_area,i);
     end
     % if mod(i,10) == 0
-    clc
+    
     disp('explored area: '+string(round(explored*100,2))+' %')
     disp('Sim Elapsed time: '+string(t)+' [s]')
     % end
@@ -179,8 +179,43 @@ while(t<sim_t)
     %     explored=0;
     % end
 end
-%clc
+clc
 disp('explored area: '+string(round(explored*100,2))+' %')
 disp('Sim Elapsed time: '+string(t)+' [s]')
 toc
 % explored_plot(bots,n_r, all_obs,s, 3, tot_area,0);
+
+%% vel plot
+id_plot=5;
+
+time_plot = (0:1:(length(bots(id_plot).vels)-1)).*0.1;
+figure
+plot(time_plot,bots(id_plot).vels(1,:).*3.6)
+figure
+plot(time_plot,bots(id_plot).vels(2,:).*60/(2*pi))
+
+%% Estimations plot
+error = bots(id_plot).estim{1} - bots(id_plot).estim{2};
+std=[];
+for i=1:3:length(bots(id_plot).estim{3})
+    std = [std,[sqrt(bots(id_plot).estim{3}(1,i));sqrt(bots(id_plot).estim{3}(2,i+1));sqrt(bots(id_plot).estim{3}(3,i+2))]];
+end
+
+figure 
+plot(time_plot,error)
+legend('x','y','\theta')
+
+figure
+plot(time_plot,std)
+legend('x','y','\theta')
+
+figure
+hold on 
+grid on
+axis equal
+plot(bots(id_plot).estim{1}(1,:),bots(id_plot).estim{1}(2,:))
+plot(bots(id_plot).estim{2}(1,:),bots(id_plot).estim{2}(2,:))
+legend('real','estimated')
+
+
+
