@@ -92,7 +92,7 @@ plot(states(3,:)*180/pi,'.')
 figure 
 hold on 
 axis equal
-tex1 = text(2.1,1.5,'{\color{red} o} Goals','FontSize',8,'Color','k','EdgeColor','k');
+tex1 = text(2,1.5,'{{\color{blue} ---}Goals','FontSize',18,'Color','k','EdgeColor','k');
 
 % 
 % rectangle('Position',[-0.25 -0.25 0.5 0.5],'Curvature',[1 1],'EdgeColor','black')
@@ -103,6 +103,7 @@ plot(p,'FaceColor','[0,1,0.5]')
 plot([x0(1),x0(1)+0.16.*cos(x0(3))],[x0(2),x0(2)+0.16.*sin(x0(3))],'Color','black',LineWidth=3)
 for i=1:length(goals)
     plot(goals{i}(1),goals{i}(2),'or','LineWidth',2)
+    
 end
 for i=1:length(goals)
     

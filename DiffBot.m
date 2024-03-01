@@ -39,6 +39,7 @@ classdef DiffBot < handle
         ku
         Ppred
         kg
+        kl
         % k0
         % k1
         rendezvous_yes = false;
@@ -77,7 +78,7 @@ classdef DiffBot < handle
                     obj.pos(1:2) = (obj.sizes-2).*rand(2,1);
                 end
             end
-            [obj.kg,obj.kd,obj.ku] = gains_ddr{:};
+            [obj.kg,obj.kl,obj.kd,obj.ku] = gains_ddr{:};
             % [obj.kg,obj.kl,obj.kd,obj.ku,obj.k0,obj.k1] = gains_ddr{:};
             obj.pos_est = obj.pos ;
             obj.neighbours = [];
@@ -133,7 +134,7 @@ classdef DiffBot < handle
             e_k = norm(obj.cell_center - obj.pos_est(1:2));
             th_k = atan2(obj.cell_center(2)-obj.pos_est(2),obj.cell_center(1)-obj.pos_est(1));
             u = obj.kg.*cos(th_k - obj.pos_est(3)).*e_k;
-            w = 2.*obj.kg.*sin(th_k - obj.pos_est(3));
+            w = 2.*obj.kg.*sin(th_k - obj.pos_est(3)) + obj.kl .* ( th_k - obj.pos_est(3));
             % u= min(1.2,u);
             % w = min(pi,w);
 

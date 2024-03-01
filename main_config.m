@@ -43,8 +43,9 @@ lidar_rad_std = 0.05;  % lidar radial noise std
 % Point dynamic gain
 kp = 8.0;               % proprotional control velocity gain
 
-% Differential Dynamic gain
+% Differential Dynamic gains
 kg = 3;
+kl = 0.05;
 % general gain
 kd = 1.3;              % dynamics set update mesh_map(Phi) gain
 ku = 0.25;              % visited set update mesh_map(Phi) gain
@@ -53,7 +54,7 @@ k1 = 0.0;              % dynamics of the cell radius gain (increase rate) 0.95
 
 gains = {kp,kd,ku,k0,k1};
 % gains_ddr = {kg,kl,kd,ku,k0,k1};
-gains_ddr = {kg,kd,ku};
+gains_ddr = {kg,kl,kd,ku};
 
 % centroid update frequency
 centroid_step = 1;      % every centroi_step, the centroid is updated 
