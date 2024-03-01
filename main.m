@@ -166,10 +166,13 @@ while(explored < 0.95)
     end
     % "Until now" explored map
     clc
-    if t > 40
+    if t>t_explo-0.1 && t<t_explo
+        [explored_set, explored] = explored_plot(bots,n_r,all_obs,s,3,tot_area);
+    end
+    if t>t_explo
         [explored_set, explored] = Howmuchexplored(bots,n_r,explored_set,tot_area);
     end
-    
+
     disp('explored area: '+string(round(explored*100,2))+' %')
     disp('Sim Elapsed time: '+string(t)+' [s]')
 
@@ -200,13 +203,27 @@ for i=1:3:length(bots(id_plot).estim{3})
     std = [std,[sqrt(bots(id_plot).estim{3}(1,i));sqrt(bots(id_plot).estim{3}(2,i+1));sqrt(bots(id_plot).estim{3}(3,i+2))]];
 end
 
-figure 
-plot(time_plot,error)
-legend('x','y','\theta')
+figure(1)
+hold on
+for i=1:3
+    subplot(3,1,i)
+    plot(time_plot,error(i,:))
+end
+hold off
 
-figure
-plot(time_plot,std)
-legend('x','y','\theta')
+figure(2)
+title('Standard deviation of the position estimate in time')
+plot(time_plot,std(1:2,:))
+legend('\sigma_x','\sigma_y')
+xlabel('time [s]')
+ylabel('\sigma [m]')
+
+figure(3)
+title('Standard deviation of the orientation estimate \thata in time')
+plot(time_plot,std(3,:))
+legend('\sigma_{\theta}')
+xlabel('time [s]')
+ylabel('\sigma [rad]')
 
 figure
 hold on 

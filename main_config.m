@@ -8,6 +8,8 @@ n_lidar = 360 ;         % n of ray in 2*pi rad of lidar sensing range
 
 environment = 1;        % 1,2,3 for different environments (4 no obstacles)
 
+t_explo = 30;
+
 
 %% SIMULATION INIT
 t=0;                    % time t [s] init
@@ -48,7 +50,7 @@ kg = 3;
 kl = 0.05;
 % general gain
 kd = 2.0;              % dynamics set update mesh_map(Phi) gain
-ku = 0.35;              % visited set update mesh_map(Phi) gain
+ku = 0.25;              % visited set update mesh_map(Phi) gain
 k0 = 0.0;              % dynamics of the cell radius gain (decrease rate) 0.05
 k1 = 0.0;              % dynamics of the cell radius gain (increase rate) 0.95
 
