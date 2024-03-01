@@ -66,6 +66,7 @@ for k = 1:length(P)
 end
 all_obs = union(P);
 
+explored_set = polyshape();
 env_w_obs = subtract(env,all_obs);
 tot_area = area(env_w_obs);
 
@@ -111,8 +112,8 @@ end
 
 %SIMULATION
 tic
-while(t<sim_t)
-% while(explored < 0.95)
+%while(t<sim_t)
+while(explored < 0.95)
     if REND
         iterate(bots,@check_object_presence);
     end
@@ -164,15 +165,14 @@ while(t<sim_t)
         % bots(1).P
     end
     % "Until now" explored map
-    if t>sim_t
-        explored = explored_plot(bots,n_r, all_obs,s, 3, tot_area,i);
+    clc
+    if t > 40
+        [explored_set, explored] = Howmuchexplored(bots,n_r,explored_set,tot_area);
     end
-    % if mod(i,10) == 0
     
     disp('explored area: '+string(round(explored*100,2))+' %')
     disp('Sim Elapsed time: '+string(t)+' [s]')
-    % end
-    % sim step increment
+
     i = i+1;
     t = t+dt;
     % if explored >0.94
@@ -183,7 +183,6 @@ clc
 disp('explored area: '+string(round(explored*100,2))+' %')
 disp('Sim Elapsed time: '+string(t)+' [s]')
 toc
-% explored_plot(bots,n_r, all_obs,s, 3, tot_area,0);
 
 %% vel plot
 id_plot=5;

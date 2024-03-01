@@ -12,7 +12,7 @@ environment = 1;        % 1,2,3 for different environments (4 no obstacles)
 %% SIMULATION INIT
 t=0;                    % time t [s] init
 i=0;                    % i var init for plot only at certain step
-sim_t = 150;             % simulation time [s]
+sim_t = 50;             % simulation time [s]
 dt = 0.1;               % time step [s]
 n_r = 5;                % Number of Agents
 rs = 4.0;               % Maximum Lidar measurements range
@@ -47,8 +47,8 @@ kp = 8.0;               % proprotional control velocity gain
 kg = 3;
 kl = 0.05;
 % general gain
-kd = 1.3;              % dynamics set update mesh_map(Phi) gain
-ku = 0.25;              % visited set update mesh_map(Phi) gain
+kd = 2.0;              % dynamics set update mesh_map(Phi) gain
+ku = 0.35;              % visited set update mesh_map(Phi) gain
 k0 = 0.0;              % dynamics of the cell radius gain (decrease rate) 0.05
 k1 = 0.0;              % dynamics of the cell radius gain (increase rate) 0.95
 
@@ -65,7 +65,7 @@ w_clip = 1000;
 
 % WANT PLOT?
 want_plot = true;          % true if you want dynamic plots
-plot_step = 3;
+plot_step = 1;
 
 % Environment polyshape
 point_env = [0,0,s+10,s+10;0,s+5,s+5,0];
