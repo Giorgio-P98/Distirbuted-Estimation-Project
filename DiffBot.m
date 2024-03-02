@@ -11,6 +11,7 @@ classdef DiffBot < handle
         grid_size=1
         dt
         rs
+        rs0
         % r_infl
         Rs
         rs_min
@@ -28,7 +29,7 @@ classdef DiffBot < handle
         noise_model_std
         gps_noise_std
         mag_noise_std
-        P = [0 0 0;0 0 0;0 0 0]+0.0005*eye(3)
+        P = [0 0 0;0 0 0;0 0 0]+20*eye(3)
         pos_est
         mesh_map = {}
         mesh_map_meas = {}
@@ -82,10 +83,11 @@ classdef DiffBot < handle
             end
             [obj.kg,obj.kl,obj.kd,obj.ku] = gains_ddr{:};
             % [obj.kg,obj.kl,obj.kd,obj.ku,obj.k0,obj.k1] = gains_ddr{:};
-            obj.pos_est = obj.pos ;
+            obj.pos_est = [0;0;0];
             obj.neighbours = [];
             obj.bot_dim = bot_r;
             obj.rs = rs;
+            obj.rs0=obj.rs;
             % obj.r_infl = rs*ones(1,n_verts);
             obj.Rs = rs;
             obj.rs_min = 0.2*rs;
@@ -129,16 +131,22 @@ classdef DiffBot < handle
 
         function u= control_and_estimate(obj)
 
-            if not(inpolygon(obj.cell_center(1),obj.cell_center(2),obj.verts_zi(1,:), obj.verts_zi(2,:)))
-                obj.mass_controidout()
-            end
+            if obj.uncertainty < 1
 
-            e_k = norm(obj.cell_center - obj.pos_est(1:2));
-            th_k = atan2(obj.cell_center(2)-obj.pos_est(2),obj.cell_center(1)-obj.pos_est(1));
-            u = obj.kg.*cos(th_k - obj.pos_est(3)).*e_k;
-            w = 2.*obj.kg.*sin(th_k - obj.pos_est(3)) + obj.kl .* ( th_k - obj.pos_est(3));
-            % u= min(1.2,u);
-            % w = min(pi,w);
+                e_k = norm(obj.cell_center - obj.pos_est(1:2));
+                th_k = atan2(obj.cell_center(2)-obj.pos_est(2),obj.cell_center(1)-obj.pos_est(1));
+                u = obj.kg.*cos(th_k - obj.pos_est(3)).*e_k;
+                w = 2.*obj.kg.*sin(th_k - obj.pos_est(3)) + obj.kl .* ( th_k - obj.pos_est(3));
+                % u= min(1.2,u);
+                % w = min(pi,w);
+                obj.rs=obj.rs0;
+                obj.pos = kinematics(obj,obj.pos,u,w,1*obj.noise_model_std);
+            else
+                u=0;
+                w=0;
+                obj.rs = 0.2;
+                obj.pos = kinematics(obj,obj.pos,u,w,0*obj.noise_model_std);
+            end
 
             obj.vels = [obj.vels,[u;w]];
 
@@ -146,7 +154,6 @@ classdef DiffBot < handle
                 u = 0;
                 w=0;
             end
-            obj.pos = kinematics(obj,obj.pos,u,w,1*obj.noise_model_std);
 
             obj.pos_est = kinematics(obj,obj.pos_est,u,w,0*obj.noise_model_std);
 
