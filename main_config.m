@@ -49,8 +49,8 @@ kp = 8.0;               % proprotional control velocity gain
 kg = 3;
 kl = 0.05;
 % general gain
-kd = 2.0;              % dynamics set update mesh_map(Phi) gain
-ku = 0.25;              % visited set update mesh_map(Phi) gain
+kd = 1.8;              % dynamics set update mesh_map(Phi) gain
+ku = 0.2;              % visited set update mesh_map(Phi) gain
 k0 = 0.0;              % dynamics of the cell radius gain (decrease rate) 0.05
 k1 = 0.0;              % dynamics of the cell radius gain (increase rate) 0.95
 

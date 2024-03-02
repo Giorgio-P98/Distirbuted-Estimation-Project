@@ -510,9 +510,9 @@ classdef DiffBot < handle
             indx_QtnoSi = max(indx_QtnoSi,0);
             indx_QtnoSi = logical(indx_QtnoSi);
             obj.mesh_map{3}(indx) = obj.mesh_map{3}(indx) - obj.kd.*obj.mesh_map{3}(indx).*obj.dt;
-            obj.mesh_map{3}(indx_QtnoSi) = obj.mesh_map{3}(indx_QtnoSi) + obj.ku.*(0.9*obj.phi__ - obj.mesh_map{3}(indx_QtnoSi))*obj.dt;
+            obj.mesh_map{3}(indx_QtnoSi) = obj.mesh_map{3}(indx_QtnoSi) + obj.ku.*(obj.phi__ - obj.mesh_map{3}(indx_QtnoSi))*obj.dt;
 
-            obj.mesh_map{3} = max(obj.mesh_map{3},0.1*obj.phi__);
+            obj.mesh_map{3} = max(obj.mesh_map{3},0.01*obj.phi__);
             obj.mesh_map{3} = min(obj.mesh_map{3},obj.phi__);
 
             % Update Phi for measure (using vert_meas)
@@ -522,9 +522,9 @@ classdef DiffBot < handle
             indx_QtnoSi_m = max(indx_QtnoSi_m,0);
             indx_QtnoSi_m = logical(indx_QtnoSi_m);
             obj.mesh_map_meas{3}(indx_m) = obj.mesh_map_meas{3}(indx_m) - obj.kd.*obj.mesh_map_meas{3}(indx_m).*obj.dt;
-            obj.mesh_map_meas{3}(indx_QtnoSi_m) = obj.mesh_map_meas{3}(indx_QtnoSi_m) + obj.ku.*(0.9*obj.phi__ - obj.mesh_map_meas{3}(indx_QtnoSi_m))*obj.dt;
+            obj.mesh_map_meas{3}(indx_QtnoSi_m) = obj.mesh_map_meas{3}(indx_QtnoSi_m) + obj.ku.*(obj.phi__ - obj.mesh_map_meas{3}(indx_QtnoSi_m))*obj.dt;
 
-            obj.mesh_map_meas{3} = max(obj.mesh_map_meas{3},0.1*obj.phi__);
+            obj.mesh_map_meas{3} = max(obj.mesh_map_meas{3},0.01*obj.phi__);
             obj.mesh_map_meas{3} = min(obj.mesh_map_meas{3},obj.phi__);
         end
 
