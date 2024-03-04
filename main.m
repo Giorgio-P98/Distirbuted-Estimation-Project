@@ -5,70 +5,25 @@ close all;
 %% CONFIGURATION FILE CALL
 main_config
 
-%% ENVIRONMENT CONSTRUCTION
-
-if environment == 1
-    % Environment 1
-    n_obs = 7;
-    obstacles = {zeros(n_obs)};
-    poly_obstacles={zeros(n_obs,1)};
-    obs1 = [5;0]+[0,0,s,s,s+5,s+5,-5,-5;5,s,s,5,5,s+5,s+5,5];
-    obs2 = [5;0]+[-5,s+5,s+5,-5;5,5,0,0];
-    obs3 = [5;0]+[2*s/3,2*s/3,2*s/3+w_t,2*s/3+w_t;5,s/3,s/3,5];
-    obs4 = [5;0]+[s,2*s/3,2*s/3,2*s/3+w_t,2*s/3+w_t,s;s/2,s/2,4*s/5,4*s/5,s/2+w_t,s/2+w_t];
-    obs5 = [5;0]+[-2;0]+[s/2,s/2,s/2+w_t,s/2+w_t;5,4*s/5-2,4*s/5-2,5];
-    obs6 = [5;0]+[-3;0]+[s/3+w_t,s/3+w_t,s/5,s/5,s/3,s/3;s,2*s/3,2*s/3,2*s/3+w_t,2*s/3+w_t,s];
-    obs7 = [5;0]+[0,s/3,s/3,0;s/3+w_t,s/3+w_t,s/3,s/3];
-    obsall = {obs1,obs2,obs3,obs4,obs5,obs6,obs7};
-elseif environment == 2
-    % Environment Two
-    door = 6;
-    corridor = 5;
-    n_obs = 5;
-    obstacles = {zeros(n_obs)};
-    poly_obstacles={zeros(n_obs,1)};
-    obs1 = [5;0]+[0,0,s,s,s+5,s+5,-5,-5;5,s,s,5,5,s+5,s+5,5];
-    obs2 = [5;0]+[-5,s+5,s+5,-5;5,5,0,0];
-    obs3 = [5;0]+[corridor,corridor,s/3,s/3,corridor+w_t,corridor+w_t;5,s/3,s/3,s/3-w_t,s/3-w_t,5];
-    obs4 = [5;0]+[s/3+door,2*s/3+w_t,2*s/3+w_t,2*s/3,2*s/3,s/3+door;s/3,s/3,5,5,s/3-w_t,s/3-w_t];
-    obs5 = [5;0]+[0;s/3+corridor]+[0,0,2*s/3+w_t,2*s/3+w_t,s/3+w_t + door/2,s/3+w_t + door/2,2*s/3,2*s/3,w_t,w_t,s/3+w_t - door/2,s/3+w_t - door/2;5,s/3,s/3,5,5,5+w_t,5+w_t,s/3-w_t,s/3-w_t,5+w_t,5+w_t,5];
-    obsall = {obs1,obs2,obs3,obs4,obs5};
-elseif environment == 3
-    % Environment 3 
-    n_obs = 4;
-    obstacles = {zeros(n_obs)};
-    poly_obstacles={zeros(n_obs,1)};
-    obs1 = [5;0]+[0,0,s,s,s+5,s+5,-5,-5;5,s,s,5,5,s+5,s+5,5];
-    obs2 = [5;0]+[-5,s+5,s+5,-5;5,5,0,0];
-    obs3 = [5;0]+[0.15*s,0.3*s,0.45*s,0.5*s,0.3*s;0.2*s,0.2*s,0.3*s,0.6*s,0.9*s];
-    obs4 = [5;0]+[0.6*s,0.8*s,0.8*s,0.6*s;0.5*s,0.5*s,0.8*s,0.8*s];
-    obsall = {obs1,obs2,obs3,obs4};
-elseif environment == 4
-    % Environment 4 (no obstacles)
-    n_obs = 2;
-    obstacles = {zeros(n_obs)};
-    poly_obstacles={zeros(n_obs,1)};
-    obs1 = [5;0]+[0,0,s,s,s+5,s+5,-5,-5;5,s,s,5,5,s+5,s+5,5];
-    obs2 = [5;0]+[-5,s+5,s+5,-5;5,5,0,0];
-    obsall = {obs1,obs2};
-else
-    disp('There are maximum 4 Environment');
-end
+%% ENVIRONMENT (from ENVIRONMENT CONSTRUCTION in main_config)
 
 % Polyshape of obstacles generation (for plot and intersection purposes)
-
-for i=1:n_obs
-    poly_obstacles{i} = polyshape(obsall{i}(1,:),obsall{i}(2,:));
-end
-P = repmat(polyshape, 1, length(poly_obstacles));
-for k = 1:length(P)
-    P(k) = poly_obstacles{k} ;
+P = repmat(polyshape, 1, n_obs);
+for k = 1:n_obs
+    P(k) = polyshape(round(obsall{k}(1,:),1),round(obsall{k}(2,:),1)) ;
 end
 all_obs = union(P);
 
-explored_set = polyshape();
 env_w_obs = subtract(env,all_obs);
 tot_area = area(env_w_obs);
+
+%% grid map for explored %
+ 
+[X,Y] = meshgrid(0:grid_s:s+10,0:grid_s:s+10);
+default_map = {X Y ones(size(X))};
+ind_obs = inpolygon(default_map{1},default_map{2},all_obs.Vertices(:,1),all_obs.Vertices(:,2));
+default_map{3}(ind_obs) = 0;
+def_map_sum = sum(default_map{3},'all');
 
 %% SIMULATION INIT
 
@@ -96,7 +51,7 @@ if want_plot
     hold on
     xlim([0 s+10])
     ylim([0 s+5])
-    iterate(bots,@plot_bot)
+    % iterate(bots,@plot_bot)
     plot(all_obs,'FaceColor','black')
     hold off
 
@@ -112,8 +67,8 @@ end
 
 %SIMULATION
 tic
-%while(t<sim_t)
-while(explored < 0.95)
+while(t<sim_t)
+%while(explored < 0.95)
     if REND
         iterate(bots,@check_object_presence);
     end
@@ -166,11 +121,14 @@ while(explored < 0.95)
     end
     % "Until now" explored map
     clc
-    if ~(REND) && t>t_explo-0.1 && t<t_explo
-        [explored_set, explored] = explored_plot(bots,n_r,all_obs,s,3,tot_area);
-    elseif ~(REND) && t>t_explo
-        [explored_set, explored] = Howmuchexplored(bots,n_r,explored_set,tot_area);
-    end
+    % if ~(REND) && round(t,2) == t_explo 
+    %     [explored_set, explored] = explored_plot(bots,n_r,all_obs,s,3,tot_area);
+    % elseif ~(REND) && t>t_explo
+    %     [explored_set, explored] = Howmuchexplored(bots,n_r,explored_set,tot_area);
+    % end
+
+    explored = Howmuchexplored(bots, n_r, def_map_sum);
+    % [explored_set, explored] = Howmuchexplored(bots,n_r,explored_set,tot_area);
 
     disp('explored area: '+string(round(explored*100,2))+' %')
     disp('Sim Elapsed time: '+string(t)+' [s]')
@@ -189,55 +147,61 @@ toc
 %% vel plot
 % id_plot=5;
 % 
-% time_plot = (0:1:(length(bots(id_plot).vels)-1)).*0.1;
 % figure
 % plot(time_plot,bots(id_plot).vels(1,:).*3.6)
 % figure
 % plot(time_plot,bots(id_plot).vels(2,:).*60/(2*pi))
 
 %% Estimations plot
-id_plot=5;
+% id_plot=4;
+% 
+% time_plot = (0:1:(length(bots(id_plot).vels)-1)).*0.1;
+% 
+% error = bots(id_plot).estim{1} - bots(id_plot).estim{2};
+% std=[];
+% for i=1:3:length(bots(id_plot).estim{3})
+%     std = [std,[sqrt(bots(id_plot).estim{3}(1,i));sqrt(bots(id_plot).estim{3}(2,i+1));sqrt(bots(id_plot).estim{3}(3,i+2))]];
+% end
+% 
+% var_label = {'e_x [m]','e_y [m]','e_{\theta} [rad]'};
+% titoli = {'x estimation error', 'y estimation error', '\theta estimation error'};
+% figure(2)
+% for i=1:3
+%     subplot(3,1,i)
+%     plot(time_plot,error(i,:))
+%     title(titoli{i})
+%     xlabel('time [s]')
+%     ylabel(var_label{i})
+% end
+% 
+% figure(3)
+% hold on
+% subplot(2,1,1)
+% plot(time_plot,std(1:2,:))
+% title('Standard deviation of the estimated position x-y')
+% legend('\sigma_x','\sigma_y')
+% xlabel('time [s]')
+% ylabel('\sigma [m]')
+% subplot(2,1,2)
+% plot(time_plot,std(3,:))
+% title('Standard deviation of the estimated orientation \theta')
+% legend('\sigma_{\theta}')
+% xlabel('time [s]')
+% ylabel('\sigma [rad]')
+% hold off
+% 
+% figure(4)
+% hold on 
+% grid on
+% axis equal
+% xlim([0 s+10])
+% ylim([0 s+5])
+% title('Real and estimated position')
+% plot(bots(id_plot).estim{1}(1,:),bots(id_plot).estim{1}(2,:))
+% plot(bots(id_plot).estim{2}(1,:),bots(id_plot).estim{2}(2,:))
+% plot(all_obs,'FaceColor','black')
+% legend('real','estimated')
 
-error = bots(id_plot).estim{1} - bots(id_plot).estim{2};
-std=[];
-for i=1:3:length(bots(id_plot).estim{3})
-    std = [std,[sqrt(bots(id_plot).estim{3}(1,i));sqrt(bots(id_plot).estim{3}(2,i+1));sqrt(bots(id_plot).estim{3}(3,i+2))]];
-end
-
-var_label = {'error in x [m]','error in y [m]','error in \theta [rad]'};
-
-figure(2)
-hold on
-title('Estimated pose errors')
-for i=1:3
-    subplot(3,1,i)
-    plot(time_plot,error(i,:))
-    xlabel('time [s]')
-    ylabel(var_label{i})
-end
-hold off
-
-figure(3)
-title('Standard deviation of the position estimate in time')
-plot(time_plot,std(1:2,:))
-legend('\sigma_x','\sigma_y')
-xlabel('time [s]')
-ylabel('\sigma [m]')
-
-figure(4)
-title('Standard deviation of the orientation estimate \thata in time')
-plot(time_plot,std(3,:))
-legend('\sigma_{\theta}')
-xlabel('time [s]')
-ylabel('\sigma [rad]')
-
-figure
-hold on 
-grid on
-axis equal
-plot(bots(id_plot).estim{1}(1,:),bots(id_plot).estim{1}(2,:))
-plot(bots(id_plot).estim{2}(1,:),bots(id_plot).estim{2}(2,:))
-legend('real','estimated')
-
-
+% 79.429617
+% 94.146914
 

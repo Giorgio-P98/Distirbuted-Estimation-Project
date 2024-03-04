@@ -14,13 +14,14 @@ t_explo = 30;
 %% SIMULATION INIT
 t=0;                    % time t [s] init
 i=0;                    % i var init for plot only at certain step
-sim_t = 50;             % simulation time [s]
+sim_t = 100;             % simulation time [s]
 dt = 0.1;               % time step [s]
-n_r = 5;                % Number of Agents
+n_r = 1;                % Number of Agents
 rs = 4.0;               % Maximum Lidar measurements range
 Rr = 0.25;              % Agents incumbrance radius
 explored = 0;           % Explored fraction of total
 explor_limit = 0.95;    % Environment is fully explored
+explored_set = polyshape();
 
 grid_s = 0.8;           % grid cell dimension (mesh_map)
 phi_max = 10;           % max value of the mesh_map (initial value)
@@ -33,7 +34,7 @@ defined_pose = true;    % true if want to use pre-defined Agents pos,itions
 conc_th = -0.05;
 
 % modify this vector to specify the birth position of the agents
-robot_init = [s-50 0]+[48 9; 45 9; 42 9; 48 12; 45 12; 42 12; 45 15];
+robot_init = [s-50 0]+[50 8; 45 8; 42 13; 47 13; 53 13; 50 17; 45 17];
 % robot_init = [s-50 0]+[8 23; 45 20; 45 45; 10 45; 45 12; 42 12; 45 15];
 
 % Simulation noises
@@ -50,7 +51,7 @@ kg = 3;
 kl = 0.05;
 % general gain
 kd = 1.7;              % dynamics set update mesh_map(Phi) gain
-ku = 0.2;              % visited set update mesh_map(Phi) gain
+ku = 0.2;             % visited set update mesh_map(Phi) gain
 k0 = 0.0;              % dynamics of the cell radius gain (decrease rate) 0.05
 k1 = 0.0;              % dynamics of the cell radius gain (increase rate) 0.95
 
@@ -66,7 +67,7 @@ u_clip = 1000;
 w_clip = 1000;
 
 % WANT PLOT?
-want_plot = true;          % true if you want dynamic plots
+want_plot = false;          % true if you want dynamic plots
 plot_step = 1;
 
 % Environment polyshape
@@ -84,5 +85,47 @@ rho_iD = 1;
 discover_target = false;
 
 rend_id = NaN;
+
+%% ENVIRONMENT CONSTRUCTION
+
+if environment == 1
+    % Environment 1
+    n_obs = 7;
+    obs1 = [5;0]+[0,0,s,s,s+5,s+5,-5,-5;5,s,s,5,5,s+5,s+5,5];
+    obs2 = [5;0]+[-5,s+5,s+5,-5;5,5,0,0];
+    obs3 = [5;0]+[2*s/3,2*s/3,2*s/3+w_t,2*s/3+w_t;5,s/3,s/3,5];
+    obs4 = [5;0]+[s,2*s/3,2*s/3,2*s/3+w_t,2*s/3+w_t,s;s/2,s/2,4*s/5,4*s/5,s/2+w_t,s/2+w_t];
+    obs5 = [5;0]+[-2;0]+[s/2,s/2,s/2+w_t,s/2+w_t;5,4*s/5-2,4*s/5-2,5];
+    obs6 = [5;0]+[-3;0]+[s/3+w_t,s/3+w_t,s/5,s/5,s/3,s/3;s,2*s/3,2*s/3,2*s/3+w_t,2*s/3+w_t,s];
+    obs7 = [5;0]+[0,s/3,s/3,0;s/3+w_t,s/3+w_t,s/3,s/3];
+    obsall = {obs1,obs2,obs3,obs4,obs5,obs6,obs7};
+elseif environment == 2
+    % Environment Two
+    door = 6;
+    corridor = 5;
+    n_obs = 5;
+    obs1 = [5;0]+[0,0,s,s,s+5,s+5,-5,-5;5,s,s,5,5,s+5,s+5,5];
+    obs2 = [5;0]+[-5,s+5,s+5,-5;5,5,0,0];
+    obs3 = [5;0]+[corridor,corridor,s/3,s/3,corridor+w_t,corridor+w_t;5,s/3,s/3,s/3-w_t,s/3-w_t,5];
+    obs4 = [5;0]+[s/3+door,2*s/3+w_t,2*s/3+w_t,2*s/3,2*s/3,s/3+door;s/3,s/3,5,5,s/3-w_t,s/3-w_t];
+    obs5 = [5;0]+[0;s/3+corridor]+[0,0,2*s/3+w_t,2*s/3+w_t,s/3+w_t + door/2,s/3+w_t + door/2,2*s/3,2*s/3,w_t,w_t,s/3+w_t - door/2,s/3+w_t - door/2;5,s/3,s/3,5,5,5+w_t,5+w_t,s/3-w_t,s/3-w_t,5+w_t,5+w_t,5];
+    obsall = {obs1,obs2,obs3,obs4,obs5};
+elseif environment == 3
+    % Environment 3 
+    n_obs = 4;
+    obs1 = [5;0]+[0,0,s,s,s+5,s+5,-5,-5;5,s,s,5,5,s+5,s+5,5];
+    obs2 = [5;0]+[-5,s+5,s+5,-5;5,5,0,0];
+    obs3 = [5;0]+[0.15*s,0.3*s,0.45*s,0.5*s,0.3*s;0.2*s,0.2*s,0.3*s,0.6*s,0.9*s];
+    obs4 = [5;0]+[0.6*s,0.8*s,0.8*s,0.6*s;0.5*s,0.5*s,0.8*s,0.8*s];
+    obsall = {obs1,obs2,obs3,obs4};
+elseif environment == 4
+    % Environment 4 (no obstacles)
+    n_obs = 2;
+    obs1 = [5;0]+[0,0,s,s,s+5,s+5,-5,-5;5,s,s,5,5,s+5,s+5,5];
+    obs2 = [5;0]+[-5,s+5,s+5,-5;5,5,0,0];
+    obsall = {obs1,obs2};
+else
+    disp('There are maximum 4 Environment');
+end
 
 

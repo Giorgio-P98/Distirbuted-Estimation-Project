@@ -144,7 +144,7 @@ classdef DiffBot < handle
             else
                 u=0;
                 w=0;
-                obj.rs = 0.2;
+                obj.rs = 0.1;
                 obj.pos = kinematics(obj,obj.pos,u,w,0*obj.noise_model_std);
             end
 
@@ -522,15 +522,16 @@ classdef DiffBot < handle
 
             % Update Phi for measure (using vert_meas)
             indx_m = inpolygon(obj.mesh_map_meas{1},obj.mesh_map_meas{2},obj.verts_meas(1,:),obj.verts_meas(2,:));
-            indx1_m = not(obj.mesh_map_meas{3}==obj.phi__);
-            indx_QtnoSi_m = indx1_m-indx_m;
-            indx_QtnoSi_m = max(indx_QtnoSi_m,0);
-            indx_QtnoSi_m = logical(indx_QtnoSi_m);
-            obj.mesh_map_meas{3}(indx_m) = obj.mesh_map_meas{3}(indx_m) - obj.kd.*obj.mesh_map_meas{3}(indx_m).*obj.dt;
-            obj.mesh_map_meas{3}(indx_QtnoSi_m) = obj.mesh_map_meas{3}(indx_QtnoSi_m) + obj.ku.*(obj.phi__ - obj.mesh_map_meas{3}(indx_QtnoSi_m))*obj.dt;
+            % indx1_m = not(obj.mesh_map_meas{3}==obj.phi__);
+            % indx_QtnoSi_m = indx1_m-indx_m;
+            % indx_QtnoSi_m = max(indx_QtnoSi_m,0);
+            % indx_QtnoSi_m = logical(indx_QtnoSi_m);
+            % obj.mesh_map_meas{3}(indx_m) = obj.mesh_map_meas{3}(indx_m) - obj.kd.*obj.mesh_map_meas{3}(indx_m).*obj.dt;
+            % obj.mesh_map_meas{3}(indx_QtnoSi_m) = obj.mesh_map_meas{3}(indx_QtnoSi_m) + obj.ku.*(obj.phi__ - obj.mesh_map_meas{3}(indx_QtnoSi_m))*obj.dt;
 
-            obj.mesh_map_meas{3} = max(obj.mesh_map_meas{3},0.01*obj.phi__);
-            obj.mesh_map_meas{3} = min(obj.mesh_map_meas{3},obj.phi__);
+            % obj.mesh_map_meas{3} = max(obj.mesh_map_meas{3},0.01*obj.phi__);
+            % obj.mesh_map_meas{3}(indx_QtnoSi_m) = min(obj.mesh_map_meas{3}(indx_QtnoSi_m),obj.phi__);
+            obj.mesh_map_meas{3}(indx_m) = 0;
         end
 
         function rendezvous(obj)

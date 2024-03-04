@@ -26,17 +26,17 @@ default_map{3}(ind_obs) = 0;
 def_map_sum = sum(default_map{3},'all');
 
 %% SIMULATION
-max_bot = 7;                % #Bot for last set of simualtion
-min_bot = 2;                % starting #Bot for set of simulation
-max_sim = 10;               % numebr of simulation per set
-t_lim = 150;                % simulation time limit
+max_bot = 5;                % #Bot for last set of simualtion
+min_bot = 1;                % starting #Bot for set of simulation
+max_sim = 2;                % numebr of simulation per set
+t_lim = 100;                % simulation time limit
 i = 1;
-t_vec = 0:0.1:t_lim;        % vector of temporal instant
+t_vec = 0:0.1:t_lim;        % vector of tempral instant
+prev_explored = 0;
 
-e_a_t = 100*explor_limit.*ones(max_sim, length(t_vec));
-explored_area_time = {e_a_t,e_a_t,e_a_t,e_a_t,e_a_t,e_a_t,e_a_t};
-
-elapsed_time_mat = zeros(max_sim,max_bot);
+explored_step_vec = zeros(length(t_vec),1);
+explored_area_time = zeros(max_bot, length(t_vec));
+elpsed_time_mat = zeros(max_bot,max_sim);
 
 %SIMULATION
 tic
@@ -50,7 +50,7 @@ for n_r = min_bot:max_bot
         end
         
         % Algoritm initialization
-        bots=update_neighbours(bots, all_obs);
+        bots=update_neighbours(bots, all_obs); clc;
         bots=update_obstacles(all_obs,bots,n_lidar,n_pointxm_meas);
         iterate(bots,@vertex_unc2);
         iterate(bots,@qt_qtnosi_update);
@@ -76,9 +76,10 @@ for n_r = min_bot:max_bot
             if mod(i,centroid_step) == 0
                 iterate(bots,@mass_centroid);
             end
-
+            
+            % "Until now" explored map
             explored = Howmuchexplored(bots, n_r, def_map_sum);
-
+            
             clc
             disp('number of bots : '+string(n_r))
             disp('simulation number: '+string(n_sim))
@@ -86,11 +87,13 @@ for n_r = min_bot:max_bot
             disp('Sim Elapsed time: '+string(t)+' [s]')
 
             % explored area matrix update
-            explored_area_time{n_r}(n_sim,i) = min(round(explored*100,2),explor_limit*100);
+            explored_step_vec(i) = explored;
         
             % sim step increment
             i = i+1;
             t = t+dt;
+
+            
 
         end
         clc
@@ -100,44 +103,32 @@ for n_r = min_bot:max_bot
         disp('Sim Elapsed time: '+string(t)+' [s]')
     
         clear 'bots'
-        elapsed_time_mat(n_sim, n_r) = t-dt;
+        elpsed_time_mat(n_r, n_sim) = t;
         i = 1;
         t = 0;
+
+        if explored > prev_explored
+            explored_area_time(n_r,:) = explored_step_vec(:);
+        end
+
+
+        prev_explored = explored;
         explored = 0;
         explored_set = polyshape();
-    end    
+        explored_step_vec = zeros(length(t_vec),1);
+    end
+    prev_explored = 0;
 end
 toc
 
-
-%% DATA ELABORATION
-
-% get rid of the higher time simulations for each intial robot set
-[~,ind] = max(elapsed_time_mat,[],'linear');
-elapsed_time_mat(ind) = NaN;
-
-
-% Find median and mean
-median_explor_t = median(elapsed_time_mat,"omitmissing");
-mean_explor_t = mean(elapsed_time_mat,"omitmissing");
-
-% Find the median index 
-[~, med_idx] = min(abs(elapsed_time_mat-median_explor_t));
-
-
-
-%% PLOT STUFF 
-n_bots_legend = ["1 bot","2 bots","3 bots","4 bots","5 bots","6 bots","7 bots"];
-
-
+%% PLOT STUFF
+ind_nonzeros = explored_area_time == 0 | explored_area_time>=0.95;
+explored_area_time(ind_nonzeros) = 0.95;
 figure(1), clf, hold on,
 for j=min_bot:max_bot
-    plot(t_vec, explored_area_time{j}(med_idx(j),:))
+    plot(t_vec, explored_area_time(j,:))
 end
-
-legend_nbot = n_bots_legend(min_bot:max_bot);
-legend(legend_nbot, Location='northwest')
+legend('1 bot','2 bots','3 bots','4 bots','5 bots',Location='northwest')
 ylabel('% of explored area')
 xlabel('time [s]')
 hold off
-
