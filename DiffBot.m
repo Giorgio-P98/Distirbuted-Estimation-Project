@@ -29,7 +29,7 @@ classdef DiffBot < handle
         noise_model_std
         gps_noise_std
         mag_noise_std
-        P = [0 0 0;0 0 0;0 0 0]+20*eye(3)
+        P = [25 0 0;0 25 0; 0 0 pi]; 
         pos_est
         mesh_map = {}
         mesh_map_meas = {}
@@ -150,10 +150,10 @@ classdef DiffBot < handle
 
             obj.vels = [obj.vels,[u;w]];
 
-            if abs(obj.P(1,1)) > 20 || abs(obj.P(2,2)) > 20
-                u = 0;
-                w=0;
-            end
+            % if abs(obj.P(1,1)) > 20 || abs(obj.P(2,2)) > 20
+            %     u = 0;
+            %     w=0;
+            % end
 
             obj.pos_est = kinematics(obj,obj.pos_est,u,w,0*obj.noise_model_std);
 
@@ -210,9 +210,7 @@ classdef DiffBot < handle
             obj.pos_est = obj.pos_est + W*([(obj.pos(1:2)+obj.gps_noise_std.*randn(2,1))-obj.pos_est(1:2);Rot*B+obj.mag_noise_std.*randn(2,1)-RotEst*B]);
             obj.P = (eye(3) - W*JacH)*obj.P*(eye(3) - W*JacH)'+W*(RH)*W';
 
-            
 
-            
             if isnan(obj.pos_est(1))
                 error('pos_est is NaN')
             end
@@ -543,10 +541,8 @@ classdef DiffBot < handle
                 obj.verts_unc(1,:),obj.verts_unc(2,:));
             obj.rho_i_update()
             obj.set_pt_update()
-            dist_q = vecnorm([obj.mesh_map{1}(indx),...
-                obj.mesh_map{2}(indx)]' - obj.set_pt);
-            obj.mesh_map{3}(indx) = obj.mesh_map{3}(indx) + ...
-                (obj.ki.*exp(-dist_q).*obj.dt)';
+            dist_q = vecnorm([obj.mesh_map{1}(indx), obj.mesh_map{2}(indx)]' - obj.set_pt);
+            obj.mesh_map{3}(indx) = obj.mesh_map{3}(indx) + (obj.ki.*exp(-dist_q).*obj.dt)';
 
             obj.mesh_map{3} = max(obj.mesh_map{3},0.001*obj.phi__);
             obj.mesh_map{3} = min(obj.mesh_map{3},obj.phi__);

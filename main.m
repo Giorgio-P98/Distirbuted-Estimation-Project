@@ -166,10 +166,9 @@ while(explored < 0.95)
     end
     % "Until now" explored map
     clc
-    if t>t_explo-0.1 && t<t_explo
+    if ~(REND) && t>t_explo-0.1 && t<t_explo
         [explored_set, explored] = explored_plot(bots,n_r,all_obs,s,3,tot_area);
-    end
-    if t>t_explo
+    elseif ~(REND) && t>t_explo
         [explored_set, explored] = Howmuchexplored(bots,n_r,explored_set,tot_area);
     end
 
@@ -188,37 +187,44 @@ disp('Sim Elapsed time: '+string(t)+' [s]')
 toc
 
 %% vel plot
-id_plot=5;
-
-time_plot = (0:1:(length(bots(id_plot).vels)-1)).*0.1;
-figure
-plot(time_plot,bots(id_plot).vels(1,:).*3.6)
-figure
-plot(time_plot,bots(id_plot).vels(2,:).*60/(2*pi))
+% id_plot=5;
+% 
+% time_plot = (0:1:(length(bots(id_plot).vels)-1)).*0.1;
+% figure
+% plot(time_plot,bots(id_plot).vels(1,:).*3.6)
+% figure
+% plot(time_plot,bots(id_plot).vels(2,:).*60/(2*pi))
 
 %% Estimations plot
+id_plot=5;
+
 error = bots(id_plot).estim{1} - bots(id_plot).estim{2};
 std=[];
 for i=1:3:length(bots(id_plot).estim{3})
     std = [std,[sqrt(bots(id_plot).estim{3}(1,i));sqrt(bots(id_plot).estim{3}(2,i+1));sqrt(bots(id_plot).estim{3}(3,i+2))]];
 end
 
-figure(1)
+var_label = {'error in x [m]','error in y [m]','error in \theta [rad]'};
+
+figure(2)
 hold on
+title('Estimated pose errors')
 for i=1:3
     subplot(3,1,i)
     plot(time_plot,error(i,:))
+    xlabel('time [s]')
+    ylabel(var_label{i})
 end
 hold off
 
-figure(2)
+figure(3)
 title('Standard deviation of the position estimate in time')
 plot(time_plot,std(1:2,:))
 legend('\sigma_x','\sigma_y')
 xlabel('time [s]')
 ylabel('\sigma [m]')
 
-figure(3)
+figure(4)
 title('Standard deviation of the orientation estimate \thata in time')
 plot(time_plot,std(3,:))
 legend('\sigma_{\theta}')
