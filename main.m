@@ -96,14 +96,14 @@ while(explored < 0.95)
         % clf,hold on
         % xlim([0 s+10])
         % ylim([0 s+5])
-        % % surf(bots(1).mesh_map_meas{1}, bots(1).mesh_map_meas{2}, bots(1).mesh_map_meas{3}, bots(1).mesh_map_meas{3})
-        % subplot(2,1,1)
-        % surf(bots(5).mesh_map{1}, bots(5).mesh_map{2}, bots(5).mesh_map{3}, bots(5).mesh_map{3})
-        % view(2)
-        % colorbar
-        % subplot(2,1,2)
-        % surf(bots(3).mesh_map{1}, bots(3).mesh_map_meas{2}, bots(3).mesh_map_meas{3}, bots(3).mesh_map_meas{3})
-        % view(2)
+        % surf(bots(1).mesh_map{1}, bots(1).mesh_map{2}, bots(1).mesh_map{3}, bots(1).mesh_map{3})
+        % % subplot(2,1,1)
+        % % surf(bots(5).mesh_map{1}, bots(5).mesh_map{2}, bots(5).mesh_map{3}, bots(5).mesh_map{3})
+        % % view(2)
+        % % colorbar
+        % % subplot(2,1,2)
+        % % surf(bots(3).mesh_map{1}, bots(3).mesh_map_meas{2}, bots(3).mesh_map_meas{3}, bots(3).mesh_map_meas{3})
+        % % view(2)
         % colorbar
         % drawnow
         % hold off

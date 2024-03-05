@@ -16,7 +16,7 @@ t=0;                    % time t [s] init
 i=0;                    % i var init for plot only at certain step
 sim_t = 100;             % simulation time [s]
 dt = 0.1;               % time step [s]
-n_r = 5;                % Number of Agents
+n_r = 7;                % Number of Agents
 rs = 4.0;               % Maximum Lidar measurements range
 Rr = 0.25;              % Agents incumbrance radius
 explored = 0;           % Explored fraction of total
@@ -68,7 +68,7 @@ u_clip = 1000;
 w_clip = 1000;
 
 % WANT PLOT?
-want_plot = false;          % true if you want dynamic plots
+want_plot = true;          % true if you want dynamic plots
 plot_step = 1;
 
 % Environment polyshape

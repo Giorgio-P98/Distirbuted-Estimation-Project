@@ -51,9 +51,9 @@ for i=1:length(bots)
                     bots(i).rendezvous_pt = bots(j).pos_est;
                 end
 
-                if bots(i).rendezvous_yes == false
-                    bots(i).mesh_map{3} = min(bots(i).mesh_map{3}, bots(j).mesh_map{3});
-                end
+                % if bots(i).rendezvous_yes == false
+                %     bots(i).mesh_map{3} = min(bots(i).mesh_map{3}, bots(j).mesh_map{3});
+                % end
 
             end
 

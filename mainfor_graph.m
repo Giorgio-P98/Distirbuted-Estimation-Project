@@ -27,7 +27,7 @@ def_map_sum = sum(default_map{3},'all');
 
 %% SIMULATION
 max_bot = 7;                % #Bot for last set of simualtion
-min_bot = 1;                % starting #Bot for set of simulation
+min_bot = 7;                % starting #Bot for set of simulation
 max_sim = 10;               % numebr of simulation per set
 t_lim = 150;                % simulation time limit
 i = 1;
@@ -79,11 +79,11 @@ for n_r = min_bot:max_bot
 
             explored = Howmuchexplored(bots, n_r, def_map_sum);
 
-            % clc
-            % disp('number of bots : '+string(n_r))
-            % disp('simulation number: '+string(n_sim))
-            % disp('explored area: '+string(round(explored*100,2))+' %')
-            % disp('Sim Elapsed time: '+string(t)+' [s]')
+            clc
+            disp('number of bots : '+string(n_r))
+            disp('simulation number: '+string(n_sim))
+            disp('explored area: '+string(round(explored*100,2))+' %')
+            disp('Sim Elapsed time: '+string(t)+' [s]')
 
             % explored area matrix update
             explored_area_time{n_r}(n_sim,i) = min(round(explored*100,2),explor_limit*100);
@@ -109,35 +109,74 @@ for n_r = min_bot:max_bot
 end
 toc
 
-
-%% DATA ELABORATION
-
-% get rid of the higher time simulations for each intial robot set
-[~,ind] = max(elapsed_time_mat,[],'linear');
-elapsed_time_mat(ind) = NaN;
+%% SAVE THE DATA
+save('7bot_nosharemap.mat')
 
 
-% Find median and mean
-median_explor_t = median(elapsed_time_mat,"omitmissing");
-mean_explor_t = mean(elapsed_time_mat,"omitmissing");
-
-% Find the median index 
-[~, med_idx] = min(abs(elapsed_time_mat-median_explor_t));
-
-
-
-%% PLOT STUFF 
-n_bots_legend = ["1 bot","2 bots","3 bots","4 bots","5 bots","6 bots","7 bots"];
-
-
-figure(1), clf, hold on,
-for j=min_bot:max_bot
-    plot(t_vec, explored_area_time{j}(med_idx(j),:))
-end
-
-legend_nbot = n_bots_legend(min_bot:max_bot);
-legend(legend_nbot, Location='northwest')
-ylabel('% of explored area')
-xlabel('time [s]')
-hold off
+% %% DATA ELABORATION
+% 
+% % get rid of the higher time simulations for each intial robot set
+% [~,ind] = max(elapsed_time_mat,[],'linear');
+% elapsed_time_mat(ind) = NaN;
+% 
+% 
+% % Find median and mean
+% median_explor_t = median(elapsed_time_mat,"omitmissing");
+% mean_explor_t = mean(elapsed_time_mat,"omitmissing");
+% 
+% % Find the median index 
+% [~, med_idx] = min(abs(elapsed_time_mat-median_explor_t));
+% 
+% 
+% 
+% %% PLOT STUFF 
+% n_bots_legend = ["1 bot","2 bots","3 bots","4 bots","5 bots","6 bots","7 bots"];
+% n_bot = [1,2,3,4,5,6,7];
+% 
+% figure(1), clf, hold on,
+% for j=min_bot:max_bot
+%     plot(t_vec, explored_area_time{j}(med_idx(j),:))
+% end
+% 
+% legend_nbot = n_bots_legend(min_bot:max_bot);
+% legend(legend_nbot, Location='northwest')
+% ylabel('% of explored area')
+% xlabel('time [s]')
+% hold off
+% 
+% figure(2), clf, hold on
+% xlim([0.5 7.5])
+% ylim([0 200])
+% for i=1:n_r
+%     line([n_bot(i), n_bot(i)], [0, mean_explor_t(i)],'linewidth',2);
+%     line([0,n_bot(i)],[mean_explor_t(i),mean_explor_t(i)],'LineStyle','--','Color','black')
+% end
+% plot(n_bot,mean_explor_t,'.',MarkerSize=20)
+% plot(5.2,mean(a))
+% text(n_bot-0.27, mean_explor_t + 7 ,string(round(mean_explor_t,2)))
+% xticklabels(n_bots_legend)
+% ylabel('time [s]')
+% hold off
+% 
+% 
+% %%
+% 
+% [~,ind] = max(a,[],'linear');
+% a(ind) = NaN;
+% 
+% %% PARAGONE
+% n_bot = 3;
+% median_a = median(a,"omitmissing");
+% mean_a = mean(a,"omitmissing");
+% [~, min_a_idx] = min(a(:,n_bot));
+% [~, min_idx] = min(elapsed_time_mat(:,n_bot));
+% [~, med_a_idx] = min(abs(a(n_bot)-median_a));
+% 
+% figure(3), clf, hold on,
+% plot(t_vec, explored_area_time{n_bot}(med_idx(n_bot),:))
+% plot(t_vec, b(med_a_idx,:))
+% legend('map share','no map share', Location='southeast')
+% ylabel('% of explored area')
+% xlabel('time [s]')
+% hold off
 
