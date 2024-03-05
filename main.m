@@ -50,25 +50,16 @@ if want_plot
     figure(1)
     hold on
     xlim([0 s+10])
-    ylim([0 s+5])
-    % iterate(bots,@plot_bot)
+    ylim([0 s+10])
+    iterate(bots,@plot_bot)
     plot(all_obs,'FaceColor','black')
     hold off
-
-    % Knowledge mesh map (discrete density Phi) plot init
-    % figure(2)
-    % hold on
-    % xlim([0 s+10])
-    % ylim([0 s+5])
-    % surf(bots(1).mesh_map_meas{1}, bots(1).mesh_map_meas{2}, bots(1).mesh_map_meas{3}, bots(1).mesh_map_meas{3})
-    % colorbar
-    
 end
 
 %SIMULATION
 tic
-while(t<sim_t)
-%while(explored < 0.95)
+% while(t<sim_t)
+while(explored < 0.95)
     if REND
         iterate(bots,@check_object_presence);
     end
@@ -92,11 +83,11 @@ while(t<sim_t)
         figure(1)
         clf,hold on
         xlim([0 s+10])
-        ylim([0 s+5])
+        ylim([0 s+10])
         iterate(bots,@plot_bot)
         plot(all_obs,'FaceColor','black')
         plot_disk(target_pos(1),target_pos(2),target_dim);
-        text(0,s+2,"sim time: "+string(t)+" [s]",'Color','white')
+        text(1,s+7,"sim time: "+string(t)+" [s]",'Color','white')
         drawnow
         hold off
     
@@ -120,27 +111,18 @@ while(t<sim_t)
         % bots(1).P
     end
     % "Until now" explored map
-    clc
-    % if ~(REND) && round(t,2) == t_explo 
-    %     [explored_set, explored] = explored_plot(bots,n_r,all_obs,s,3,tot_area);
-    % elseif ~(REND) && t>t_explo
-    %     [explored_set, explored] = Howmuchexplored(bots,n_r,explored_set,tot_area);
-    % end
-
     explored = Howmuchexplored(bots, n_r, def_map_sum);
-    % [explored_set, explored] = Howmuchexplored(bots,n_r,explored_set,tot_area);
 
-    disp('explored area: '+string(round(explored*100,2))+' %')
+    clc
+    disp('explored area 1: '+string(round(explored*100,2))+' %')
     disp('Sim Elapsed time: '+string(t)+' [s]')
 
     i = i+1;
     t = t+dt;
-    % if explored >0.94
-    %     explored=0;
-    % end
 end
 clc
-disp('explored area: '+string(round(explored*100,2))+' %')
+disp('explored area 1: '+string(round(explored*100,2))+' %')
+disp('explored area 2: '+string(round(explored2*100,2))+' %')
 disp('Sim Elapsed time: '+string(t)+' [s]')
 toc
 
@@ -204,4 +186,15 @@ toc
 
 % 79.429617
 % 94.146914
+
+%% PLOT MESH MAP MEAS
+% 
+% figure(2), clf
+% plot(explored_set)
+% 
+% figure(3), clf
+% surf(bots(1).mesh_map_meas{1}, bots(1).mesh_map_meas{2}, bots(1).mesh_map_meas{3}, bots(1).mesh_map_meas{3})
+% 
+% figure(4), clf
+% surf(default_map{1}, default_map{2}, default_map{3}, default_map{3})
 

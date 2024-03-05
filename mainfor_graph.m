@@ -27,7 +27,7 @@ def_map_sum = sum(default_map{3},'all');
 
 %% SIMULATION
 max_bot = 7;                % #Bot for last set of simualtion
-min_bot = 2;                % starting #Bot for set of simulation
+min_bot = 1;                % starting #Bot for set of simulation
 max_sim = 10;               % numebr of simulation per set
 t_lim = 150;                % simulation time limit
 i = 1;
@@ -79,11 +79,11 @@ for n_r = min_bot:max_bot
 
             explored = Howmuchexplored(bots, n_r, def_map_sum);
 
-            clc
-            disp('number of bots : '+string(n_r))
-            disp('simulation number: '+string(n_sim))
-            disp('explored area: '+string(round(explored*100,2))+' %')
-            disp('Sim Elapsed time: '+string(t)+' [s]')
+            % clc
+            % disp('number of bots : '+string(n_r))
+            % disp('simulation number: '+string(n_sim))
+            % disp('explored area: '+string(round(explored*100,2))+' %')
+            % disp('Sim Elapsed time: '+string(t)+' [s]')
 
             % explored area matrix update
             explored_area_time{n_r}(n_sim,i) = min(round(explored*100,2),explor_limit*100);

@@ -16,10 +16,11 @@ t=0;                    % time t [s] init
 i=0;                    % i var init for plot only at certain step
 sim_t = 100;             % simulation time [s]
 dt = 0.1;               % time step [s]
-n_r = 1;                % Number of Agents
+n_r = 5;                % Number of Agents
 rs = 4.0;               % Maximum Lidar measurements range
 Rr = 0.25;              % Agents incumbrance radius
 explored = 0;           % Explored fraction of total
+explored2 = 0;
 explor_limit = 0.95;    % Environment is fully explored
 explored_set = polyshape();
 
@@ -91,29 +92,30 @@ rend_id = NaN;
 if environment == 1
     % Environment 1
     n_obs = 7;
-    obs1 = [5;0]+[0,0,s,s,s+5,s+5,-5,-5;5,s,s,5,5,s+5,s+5,5];
+    obs1 = [5;5]+[0,0,s,s,s+5,s+5,-5,-5;0,s,s,0,0,s+5,s+5,0];
     obs2 = [5;0]+[-5,s+5,s+5,-5;5,5,0,0];
-    obs3 = [5;0]+[2*s/3,2*s/3,2*s/3+w_t,2*s/3+w_t;5,s/3,s/3,5];
-    obs4 = [5;0]+[s,2*s/3,2*s/3,2*s/3+w_t,2*s/3+w_t,s;s/2,s/2,4*s/5,4*s/5,s/2+w_t,s/2+w_t];
-    obs5 = [5;0]+[-2;0]+[s/2,s/2,s/2+w_t,s/2+w_t;5,4*s/5-2,4*s/5-2,5];
-    obs6 = [5;0]+[-3;0]+[s/3+w_t,s/3+w_t,s/5,s/5,s/3,s/3;s,2*s/3,2*s/3,2*s/3+w_t,2*s/3+w_t,s];
+    obs3 = [5;0]+[2*s/3,2*s/3,2*s/3+w_t,2*s/3+w_t;5,s/3+3,s/3+3,5];
+    obs4 = [5;5]+[s,2*s/3,2*s/3,2*s/3+w_t,2*s/3+w_t,s;s/2,s/2,4*s/5,4*s/5,s/2+w_t,s/2+w_t];
+    obs5 = [5;0]+[-2;0]+[s/2,s/2,s/2+w_t,s/2+w_t;5,4*s/5,4*s/5,5];
+    obs6 = [5;0]+[-3;0]+[s/3+w_t,s/3+w_t,s/5,s/5,s/3,s/3;s+5,2*s/3,2*s/3,2*s/3+w_t,2*s/3+w_t,s+5];
     obs7 = [5;0]+[0,s/3,s/3,0;s/3+w_t,s/3+w_t,s/3,s/3];
     obsall = {obs1,obs2,obs3,obs4,obs5,obs6,obs7};
 elseif environment == 2
     % Environment Two
     door = 6;
     corridor = 5;
-    n_obs = 5;
-    obs1 = [5;0]+[0,0,s,s,s+5,s+5,-5,-5;5,s,s,5,5,s+5,s+5,5];
+    n_obs = 6;
+    obs1 = [5;5]+[0,0,s,s,s+5,s+5,-5,-5;0,s,s,0,0,s+5,s+5,0];
     obs2 = [5;0]+[-5,s+5,s+5,-5;5,5,0,0];
-    obs3 = [5;0]+[corridor,corridor,s/3,s/3,corridor+w_t,corridor+w_t;5,s/3,s/3,s/3-w_t,s/3-w_t,5];
-    obs4 = [5;0]+[s/3+door,2*s/3+w_t,2*s/3+w_t,2*s/3,2*s/3,s/3+door;s/3,s/3,5,5,s/3-w_t,s/3-w_t];
-    obs5 = [5;0]+[0;s/3+corridor]+[0,0,2*s/3+w_t,2*s/3+w_t,s/3+w_t + door/2,s/3+w_t + door/2,2*s/3,2*s/3,w_t,w_t,s/3+w_t - door/2,s/3+w_t - door/2;5,s/3,s/3,5,5,5+w_t,5+w_t,s/3-w_t,s/3-w_t,5+w_t,5+w_t,5];
-    obsall = {obs1,obs2,obs3,obs4,obs5};
+    obs3 = [5;5]+[corridor,corridor,s/3,s/3,corridor+w_t,corridor+w_t;0,s/3,s/3,s/3-w_t,s/3-w_t,0];
+    obs4 = [5;5]+[s/3+door,2*s/3+w_t,2*s/3+w_t,2*s/3,2*s/3,s/3+door;s/3,s/3,0,0,s/3-w_t,s/3-w_t];
+    obs5 = [5;2]+[0;s/3+corridor]+[0,2*s/3+w_t,2*s/3+w_t,s/3+w_t + door/2,s/3+w_t + door/2,2*s/3,2*s/3,0;s/3+7,s/3+7,5+0.7,5+0.7,5+w_t+0.7,5+w_t+0.7,s/3-w_t+7,s/3-w_t+7];
+    obs6 = [5;2.7]+[0;s/3+corridor]+[0,s/3+w_t - door/2,s/3+w_t - door/2,0;5,5,5+w_t,5+w_t];
+    obsall = {obs1,obs2,obs3,obs4,obs5,obs6};
 elseif environment == 3
     % Environment 3 
     n_obs = 4;
-    obs1 = [5;0]+[0,0,s,s,s+5,s+5,-5,-5;5,s,s,5,5,s+5,s+5,5];
+    obs1 = [5;5]+[0,0,s,s,s+5,s+5,-5,-5;0,s,s,0,0,s+5,s+5,0];
     obs2 = [5;0]+[-5,s+5,s+5,-5;5,5,0,0];
     obs3 = [5;0]+[0.15*s,0.3*s,0.45*s,0.5*s,0.3*s;0.2*s,0.2*s,0.3*s,0.6*s,0.9*s];
     obs4 = [5;0]+[0.6*s,0.8*s,0.8*s,0.6*s;0.5*s,0.5*s,0.8*s,0.8*s];
@@ -121,7 +123,7 @@ elseif environment == 3
 elseif environment == 4
     % Environment 4 (no obstacles)
     n_obs = 2;
-    obs1 = [5;0]+[0,0,s,s,s+5,s+5,-5,-5;5,s,s,5,5,s+5,s+5,5];
+    obs1 = [5;5]+[0,0,s,s,s+5,s+5,-5,-5;0,s,s,0,0,s+5,s+5,0];
     obs2 = [5;0]+[-5,s+5,s+5,-5;5,5,0,0];
     obsall = {obs1,obs2};
 else

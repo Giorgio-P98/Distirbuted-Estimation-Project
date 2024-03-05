@@ -11,7 +11,6 @@ classdef DiffBot < handle
         grid_size=1
         dt
         rs
-        rs0
         % r_infl
         Rs
         rs_min
@@ -87,7 +86,6 @@ classdef DiffBot < handle
             obj.neighbours = [];
             obj.bot_dim = bot_r;
             obj.rs = rs;
-            obj.rs0=obj.rs;
             % obj.r_infl = rs*ones(1,n_verts);
             obj.Rs = rs;
             obj.rs_min = 0.2*rs;
@@ -131,15 +129,14 @@ classdef DiffBot < handle
 
         function u= control_and_estimate(obj)
 
-            if obj.uncertainty < 1
-
+            if  obj.uncertainty < 1
                 e_k = norm(obj.cell_center - obj.pos_est(1:2));
                 th_k = atan2(obj.cell_center(2)-obj.pos_est(2),obj.cell_center(1)-obj.pos_est(1));
                 u = obj.kg.*cos(th_k - obj.pos_est(3)).*e_k;
                 w = 2.*obj.kg.*sin(th_k - obj.pos_est(3)) + obj.kl .* ( th_k - obj.pos_est(3));
                 % u= min(1.2,u);
                 % w = min(pi,w);
-                obj.rs=obj.rs0;
+                obj.rs=obj.Rs;
                 obj.pos = kinematics(obj,obj.pos,u,w,1*obj.noise_model_std);
             else
                 u=0;
@@ -239,8 +236,8 @@ classdef DiffBot < handle
             %verts_uncc=inv([cos(obj.pos_est(3)) -sin(obj.pos_est(3)); sin(obj.pos_est(3))  cos(obj.pos_est(3))])*(obj.verts_unc-obj.pos_est(1:2)) + obj.pos_est(1:2);
             %verts_zii=inv([cos(obj.pos_est(3)) -sin(obj.pos_est(3)); sin(obj.pos_est(3))  cos(obj.pos_est(3))])*(obj.verts_zi-obj.pos_est(1:2)) + obj.pos_est(1:2);
             plot([obj.verts_unc(1,:),obj.verts_unc(1,1)],[obj.verts_unc(2,:),obj.verts_unc(2,1)])
-            %plot([obj.verts_zi(1,:),obj.verts_zi(1,1)],[obj.verts_zi(2,:),obj.verts_zi(2,1)])
-            %plot([obj.verts_meas(1,:),obj.verts_meas(1,1)],[obj.verts_meas(2,:),obj.verts_meas(2,1)])
+            % plot([obj.verts_zi(1,:),obj.verts_zi(1,1)],[obj.verts_zi(2,:),obj.verts_zi(2,1)])
+            % plot([obj.verts_meas(1,:),obj.verts_meas(1,1)],[obj.verts_meas(2,:),obj.verts_meas(2,1)])
 
             %plot([obj.verts_qt(1,:),obj.verts_qt(1,1)],[obj.verts_qt(2,:),obj.verts_qt(2,1)])
             plot_unc(obj)
