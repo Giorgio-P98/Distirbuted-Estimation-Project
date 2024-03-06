@@ -34,7 +34,8 @@ for j=1:n_r
 end
 
 % Algoritm initialization
-bots=update_neighbours(bots, all_obs); clc;
+iterate(bots,@uncertainty);
+% bots=update_neighbours(bots, all_obs); clc;
 bots=update_obstacles(all_obs,bots,n_lidar,n_pointxm_meas);
 iterate(bots,@vertex_unc2);
 iterate(bots,@qt_qtnosi_update);
@@ -64,7 +65,8 @@ while(explored < 0.95)
         iterate(bots,@check_object_presence);
     end
     iterate(bots,@control_and_estimate);
-    bots=update_neighbours(bots, all_obs);
+    iterate(bots,@uncertainty);
+    % bots=update_neighbours(bots, all_obs);
     bots=update_obstacles(all_obs,bots,n_lidar,n_pointxm_meas);
     iterate(bots,@vertex_unc2);
     warning('off')
@@ -97,6 +99,9 @@ while(explored < 0.95)
         % xlim([0 s+10])
         % ylim([0 s+5])
         % surf(bots(1).mesh_map{1}, bots(1).mesh_map{2}, bots(1).mesh_map{3}, bots(1).mesh_map{3})
+        % colorbar
+        % drawnow
+        % hold off
         % % subplot(2,1,1)
         % % surf(bots(5).mesh_map{1}, bots(5).mesh_map{2}, bots(5).mesh_map{3}, bots(5).mesh_map{3})
         % % view(2)
@@ -111,10 +116,11 @@ while(explored < 0.95)
         % bots(1).P
     end
     % "Until now" explored map
-    explored = Howmuchexplored(bots, n_r, def_map_sum);
+    % explored = Howmuchexplored(bots, def_map_sum, phi_max);
+    explored = Howmuchexplored2(bots, n_r, def_map_sum, phi_max);
 
     clc
-    disp('explored area 1: '+string(round(explored*100,2))+' %')
+    disp('explored area: '+string(round(explored*100,2))+' %')
     disp('Sim Elapsed time: '+string(t)+' [s]')
 
     i = i+1;

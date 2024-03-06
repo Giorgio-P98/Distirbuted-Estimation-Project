@@ -50,6 +50,7 @@ for n_r = min_bot:max_bot
         end
         
         % Algoritm initialization
+        iterate(bots,@uncertainty);
         bots=update_neighbours(bots, all_obs); clc;
         bots=update_obstacles(all_obs,bots,n_lidar,n_pointxm_meas);
         iterate(bots,@vertex_unc2);
@@ -62,6 +63,7 @@ for n_r = min_bot:max_bot
                 iterate(bots,@check_object_presence);
             end
             iterate(bots,@control_and_estimate);
+            iterate(bots,@uncertainty);
             bots=update_neighbours(bots, all_obs);
             bots=update_obstacles(all_obs,bots,n_lidar,n_pointxm_meas);
             iterate(bots,@vertex_unc2);
@@ -78,7 +80,7 @@ for n_r = min_bot:max_bot
             end
             
             % "Until now" explored map
-            explored = Howmuchexplored(bots, n_r, def_map_sum);
+            explored = Howmuchexplored(bots, n_r, def_map_sum, phi_max);
             
             clc
             disp('number of bots : '+string(n_r))

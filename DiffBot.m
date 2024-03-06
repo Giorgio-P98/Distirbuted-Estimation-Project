@@ -61,6 +61,7 @@ classdef DiffBot < handle
         conc_th
         vels=[]
         estim=cell(1,3)
+        uncertainty_calc = 0
     end
 
     methods
@@ -129,7 +130,7 @@ classdef DiffBot < handle
 
         function u= control_and_estimate(obj)
 
-            if  obj.uncertainty < 1
+            if  obj.uncertainty_calc < 1
                 e_k = norm(obj.cell_center - obj.pos_est(1:2));
                 th_k = atan2(obj.cell_center(2)-obj.pos_est(2),obj.cell_center(1)-obj.pos_est(1));
                 u = obj.kg.*cos(th_k - obj.pos_est(3)).*e_k;
@@ -270,10 +271,10 @@ classdef DiffBot < handle
             end
         end
 
-        function radius=uncertainty(obj)
+        function uncertainty(obj)
             [~,l]=eig(obj.P(1:2,1:2));
             %%radius = 1/2*min(l(:));
-            radius = 3.*sqrt(max(l(:)));
+            obj.uncertainty_calc = 3.*sqrt(max(l(:)));
         end
 
         function [inf,inf0]=vertex_unc2(obj)
@@ -282,10 +283,10 @@ classdef DiffBot < handle
             obj.verts_meas=obj.Rs.*[cos(angles_meas);sin(angles_meas)] + obj.pos(1:2);
             rads_meas = obj.Rs*ones(1,obj.steps_vert);
             d_th = 2*pi/obj.steps_vert;
+            dist_safe = obj.uncertainty_calc;
             th = 0;
             rs_ = obj.rs;
             rs_step = rs_/100;
-            dist_safe = uncertainty(obj);
             rads= zeros(1,obj.steps_vert);
             %rads_meas = obj.Rs*ones(1,obj.steps_vert);
             angles= zeros(1,obj.steps_vert);

@@ -50,6 +50,7 @@ kp = 8.0;               % proprotional control velocity gain
 % Differential Dynamic gains
 kg = 3;
 kl = 0.05;
+
 % general gain
 kd = 1.7;              % dynamics set update mesh_map(Phi) gain
 ku = 0.2;             % visited set update mesh_map(Phi) gain
