@@ -90,6 +90,12 @@ for n_sim = 1:max_sim
 end
 
 %% DATA ELABORATION
+
+% Uncomment only if want to load the ready data, this will overwrite all
+% datas gained with an above simulation
+% load('rendezvous_sim_results.mat')
+
+
 convergence_idx = zeros(max_sim,1);
 
 for i=1:max_sim
@@ -122,7 +128,5 @@ annotation('textarrow',[0.5 0.45],[0.4 0.2],'String','Rendezvous')
 annotation('textarrow',[0.78 0.73],[0.3 0.15],'String','Convergence')
 text(40.4,205,'$t_1 = 40.4 s$','Interpreter','latex')
 text(convergence_time(med_idx),32,'$t_2 =$'+string(convergence_time(med_idx))+'$s$','Interpreter','latex')
-% annotation('textarrow',[],[],'String','y = x ')
-% annotation('textarrow',[],[],'String','y = x ')
 
 
