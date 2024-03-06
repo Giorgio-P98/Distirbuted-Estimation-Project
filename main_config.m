@@ -53,7 +53,7 @@ kl = 0.05;
 
 % general gain
 kd = 1.7;              % dynamics set update mesh_map(Phi) gain
-ku = 0.2;             % visited set update mesh_map(Phi) gain
+ku = 0.2;              % visited set update mesh_map(Phi) gain
 k0 = 0.0;              % dynamics of the cell radius gain (decrease rate) 0.05
 k1 = 0.0;              % dynamics of the cell radius gain (increase rate) 0.95
 
@@ -77,7 +77,7 @@ point_env = [0,0,s+10,s+10;0,s+5,s+5,0];
 env = polyshape(point_env(1,:), point_env(2,:));
 
 %% RENDEZVOUS
-REND = false;
+REND = true;
 
 target_pos = [round(s/5); round(s/2)];
 target_dim = 0.4;

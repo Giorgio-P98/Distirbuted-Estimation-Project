@@ -1,0 +1,91 @@
+clc;
+clearvars;
+close all;
+
+%% CONFIGURATION FILE CALL
+main_config
+
+%% ENVIRONMENT (from ENVIRONMENT CONSTRUCTION in main_config)
+
+% Polyshape of obstacles generation (for plot and intersection purposes)
+P = repmat(polyshape, 1, n_obs);
+for k = 1:n_obs
+    P(k) = polyshape(round(obsall{k}(1,:),1),round(obsall{k}(2,:),1)) ;
+end
+all_obs = union(P);
+
+%% SIMULATION INIT
+REND = true;
+max_sim = 10;               % numebr of simulation per set
+t_lim = 200;                % simulation time limit
+i = 1;
+t_vec = 0:0.1:t_lim;        % vector of temporal instant
+sum_rend_distance = zeros(max_sim,length(t_vec));
+
+for n_sim = 1:max_sim
+    for j=1:n_r
+        bots(j) = DiffBot(dt,s,rs,Rr,j,defined_pose,robot_init, ...
+            union(P),gps_n,model_n,mag_n,gains_ddr,grid_s,phi_max, ...
+            n_verts,target_pos,ki,rho_i_init,rho_iD,u_clip,w_clip, ...
+            lidar_rad_std,conc_th);
+    end
+    
+    % Algoritm initialization
+    iterate(bots,@uncertainty);
+    bots=update_neighbours(bots, all_obs);
+    bots=update_obstacles(all_obs,bots,n_lidar,n_pointxm_meas);
+    iterate(bots,@vertex_unc2);
+    iterate(bots,@qt_qtnosi_update);
+    iterate(bots,@update_phi)
+    iterate(bots,@mass_centroid);
+
+    while(t<=t_lim)
+        iterate(bots,@check_object_presence);
+        iterate(bots,@control_and_estimate);
+        iterate(bots,@uncertainty);
+        bots=update_neighbours(bots, all_obs);
+        bots=update_obstacles(all_obs,bots,n_lidar,n_pointxm_meas);
+        iterate(bots,@vertex_unc2);
+        warning('off')
+        iterate(bots,@qt_qtnosi_update);
+        warning('on')
+        iterate(bots,@update_phi);
+        
+        if mod(i,centroid_step) == 0
+            iterate(bots,@mass_centroid);
+        end
+        if want_plot && mod(i,200) == 0
+            % Environment with bots plot init
+            figure(1)
+            clf,hold on
+            xlim([0 s+10])
+            ylim([0 s+10])
+            iterate(bots,@plot_bot)
+            plot(all_obs,'FaceColor','black')
+            plot_disk(target_pos(1),target_pos(2),target_dim);
+            text(1,s+7,"sim time: "+string(t)+" [s]",'Color','white')
+            
+            hold off
+            f = gcf;
+            exportgraphics(f,'images/img_rend/n_sim='+string(n_sim)+'_t='+string(t)+'.png','Resolution',600);
+        end
+
+        rend_dist = rendezvous_dist(bots, n_r, target_pos);
+        sum_rend_distance(n_sim,i) = rend_dist;
+
+        clc
+        disp('simulation number: '+string(n_sim))
+        disp('Sim Elapsed time: '+string(t)+' [s]')
+        disp('sum of norm distance from target: '+string(rend_dist)+' [m]')
+    
+        % sim step increment
+        i = i+1;
+        t = t+dt;
+
+    end
+    clear 'bots'
+    i = 1;
+    t = 0;
+end
+
+

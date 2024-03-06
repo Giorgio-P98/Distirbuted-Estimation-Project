@@ -22,24 +22,24 @@ for i=1:length(bots)
                 end
 
                 %% UNCOMMENT FOR RENDEZVOUS
-                % if bots(j).discover_target == true
-                %     bots(i).rendezvous_pt = bots(j).rendezvous_pt;
-                %     bots(i).target_pt = bots(j).target_pt;
-                %     bots(i).rendezvous_yes = true;
-                %     bots(i).mesh_map{3}(:) = 0.001*bots(i).phi__;
-                %     % bots(i).rs = 3*bots(i).Rs/4;
-                %     bots(i).rend_id = NaN;
-                % elseif bots(i).rendezvous_yes == false && bots(j).rendezvous_yes == true 
-                %     bots(i).rendezvous_pt = bots(j).pos_est;
-                %     bots(i).rendezvous_yes = true;
-                %     bots(i).rend_id = bots(j).id;
-                %     bots(i).mesh_map{3}(:) = 0.001*bots(i).phi__;
-                %     % bots(i).rs = 3*bots(i).Rs/4;
-                % end
-                % 
-                % if bots(i).rendezvous_yes == true && ~isnan(bots(i).rend_id) && bots(j).id == bots(i).rend_id
-                %     bots(i).rendezvous_pt = bots(j).pos_est;
-                % end
+                if bots(j).discover_target == true
+                    bots(i).rendezvous_pt = bots(j).rendezvous_pt;
+                    bots(i).target_pt = bots(j).target_pt;
+                    bots(i).rendezvous_yes = true;
+                    bots(i).mesh_map{3}(:) = 0.001*bots(i).phi__;
+                    % bots(i).rs = 3*bots(i).Rs/4;
+                    bots(i).rend_id = NaN;
+                elseif bots(i).rendezvous_yes == false && bots(j).rendezvous_yes == true 
+                    bots(i).rendezvous_pt = bots(j).pos_est;
+                    bots(i).rendezvous_yes = true;
+                    bots(i).rend_id = bots(j).id;
+                    bots(i).mesh_map{3}(:) = 0.001*bots(i).phi__;
+                    % bots(i).rs = 3*bots(i).Rs/4;
+                end
+
+                if bots(i).rendezvous_yes == true && ~isnan(bots(i).rend_id) && bots(j).id == bots(i).rend_id
+                    bots(i).rendezvous_pt = bots(j).pos_est;
+                end
             end
         end
     end

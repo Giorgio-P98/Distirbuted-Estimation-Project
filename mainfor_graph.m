@@ -14,9 +14,6 @@ for k = 1:n_obs
 end
 all_obs = union(P);
 
-env_w_obs = subtract(env,all_obs);
-tot_area = area(env_w_obs);
-
 %% Grid Map for exploration calculus
 
 [X,Y] = meshgrid(0:grid_s:s+10,0:grid_s:s+10);
@@ -51,7 +48,7 @@ for n_r = min_bot:max_bot
         
         % Algoritm initialization
         iterate(bots,@uncertainty);
-        % bots=update_neighbours(bots, all_obs);
+        bots=update_neighbours(bots, all_obs);
         bots=update_obstacles(all_obs,bots,n_lidar,n_pointxm_meas);
         iterate(bots,@vertex_unc2);
         iterate(bots,@qt_qtnosi_update);
@@ -64,7 +61,7 @@ for n_r = min_bot:max_bot
             end
             iterate(bots,@control_and_estimate);
             iterate(bots,@uncertainty);
-            % bots=update_neighbours(bots, all_obs);
+            bots=update_neighbours(bots, all_obs);
             bots=update_obstacles(all_obs,bots,n_lidar,n_pointxm_meas);
             iterate(bots,@vertex_unc2);
             warning('off')
@@ -96,11 +93,6 @@ for n_r = min_bot:max_bot
             t = t+dt;
 
         end
-        clc
-        disp('number of bots : '+string(n_r))
-        disp('simulation number: '+string(n_sim))
-        disp('explored area: '+string(round(explored*100,2))+' %')
-        disp('Sim Elapsed time: '+string(t)+' [s]')
     
         clear 'bots'
         elapsed_time_mat(n_sim, n_r) = t-dt;

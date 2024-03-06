@@ -536,8 +536,7 @@ classdef DiffBot < handle
             if mod(obj.zeroer,10) == 0                                      % if the zeroer is a multiple of 10, then phi is zeroed (improve rendezvous dynamic)
                 obj.mesh_map{3}(:) = 0.001*obj.phi__;
             end
-            indx = inpolygon(obj.mesh_map{1},obj.mesh_map{2},...
-                obj.verts_unc(1,:),obj.verts_unc(2,:));
+            indx = inpolygon(obj.mesh_map{1},obj.mesh_map{2},obj.verts_unc(1,:),obj.verts_unc(2,:));
             obj.rho_i_update()
             obj.set_pt_update()
             dist_q = vecnorm([obj.mesh_map{1}(indx), obj.mesh_map{2}(indx)]' - obj.set_pt);
