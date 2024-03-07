@@ -19,7 +19,7 @@ tot_area = area(env_w_obs);
 
 %% Grid Map for exploration calculus
 
-[X,Y] = meshgrid(0:grid_s:s+10,0:grid_s:s+10);
+[X,Y] = meshgrid(2:grid_s:s+8,2:grid_s:s+8);
 default_map = {X Y ones(size(X))};
 ind_obs = inpolygon(default_map{1},default_map{2},all_obs.Vertices(:,1),all_obs.Vertices(:,2));
 default_map{3}(ind_obs) = 0;

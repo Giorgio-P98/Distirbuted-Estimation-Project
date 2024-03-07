@@ -97,7 +97,7 @@ classdef DiffBot < handle
             obj.phi__ = phi_max;
             obj.steps_vert = n_verts;
 
-            [X,Y] = meshgrid(0:obj.grid_size:obj.sizes+10,0:obj.grid_size:obj.sizes+10);
+            [X,Y] = meshgrid(2:obj.grid_size:obj.sizes+8,2:obj.grid_size:obj.sizes+8);
             obj.mesh_map = {X Y obj.phi__.*ones(size(X))};
             obj.mesh_map_meas = obj.mesh_map;
 
@@ -236,9 +236,9 @@ classdef DiffBot < handle
             %plot(obj.verts(1,:),obj.verts(2,:))
             %verts_uncc=inv([cos(obj.pos_est(3)) -sin(obj.pos_est(3)); sin(obj.pos_est(3))  cos(obj.pos_est(3))])*(obj.verts_unc-obj.pos_est(1:2)) + obj.pos_est(1:2);
             %verts_zii=inv([cos(obj.pos_est(3)) -sin(obj.pos_est(3)); sin(obj.pos_est(3))  cos(obj.pos_est(3))])*(obj.verts_zi-obj.pos_est(1:2)) + obj.pos_est(1:2);
-            plot([obj.verts_unc(1,:),obj.verts_unc(1,1)],[obj.verts_unc(2,:),obj.verts_unc(2,1)])
-            % plot([obj.verts_zi(1,:),obj.verts_zi(1,1)],[obj.verts_zi(2,:),obj.verts_zi(2,1)])
-            % plot([obj.verts_meas(1,:),obj.verts_meas(1,1)],[obj.verts_meas(2,:),obj.verts_meas(2,1)])
+            plot([obj.verts_unc(1,:),obj.verts_unc(1,1)],[obj.verts_unc(2,:),obj.verts_unc(2,1)],"LineWidth",1.1,"Color",'k')
+            % plot([obj.verts_zi(1,:),obj.verts_zi(1,1)],[obj.verts_zi(2,:),obj.verts_zi(2,1)],"LineWidth",1.3,"Color",'b')
+            % plot([obj.verts_meas(1,:),obj.verts_meas(1,1)],[obj.verts_meas(2,:),obj.verts_meas(2,1)],"LineWidth",1.3,"Color",'b')
 
             %plot([obj.verts_qt(1,:),obj.verts_qt(1,1)],[obj.verts_qt(2,:),obj.verts_qt(2,1)])
             plot_unc(obj)
@@ -513,10 +513,10 @@ classdef DiffBot < handle
             indx_QtnoSi = max(indx_QtnoSi,0);
             indx_QtnoSi = logical(indx_QtnoSi);
             obj.mesh_map{3}(indx) = obj.mesh_map{3}(indx) - obj.kd.*obj.mesh_map{3}(indx).*obj.dt;
-            obj.mesh_map{3}(indx_QtnoSi) = obj.mesh_map{3}(indx_QtnoSi) + obj.ku.*(obj.phi__ - obj.mesh_map{3}(indx_QtnoSi))*obj.dt;
+            obj.mesh_map{3}(indx_QtnoSi) = obj.mesh_map{3}(indx_QtnoSi) + obj.ku.*(0.9*obj.phi__ - obj.mesh_map{3}(indx_QtnoSi))*obj.dt;
 
-            obj.mesh_map{3} = max(obj.mesh_map{3},0.01*obj.phi__);
-            obj.mesh_map{3} = min(obj.mesh_map{3},obj.phi__);
+            obj.mesh_map{3} = max(obj.mesh_map{3},0.001*obj.phi__);
+            % obj.mesh_map{3} = min(obj.mesh_map{3},obj.phi__);
 
             % Update Phi for measure (using vert_meas)
             indx_m = inpolygon(obj.mesh_map_meas{1},obj.mesh_map_meas{2},obj.verts_meas(1,:),obj.verts_meas(2,:));

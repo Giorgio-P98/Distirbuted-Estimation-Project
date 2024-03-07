@@ -16,7 +16,7 @@ t=0;                    % time t [s] init
 i=0;                    % i var init for plot only at certain step
 sim_t = 100;             % simulation time [s]
 dt = 0.1;               % time step [s]
-n_r = 7;                % Number of Agents
+n_r = 5;                % Number of Agents
 rs = 4.0;               % Maximum Lidar measurements range
 Rr = 0.25;              % Agents incumbrance radius
 explored = 0;           % Explored fraction of total
@@ -77,7 +77,7 @@ point_env = [0,0,s+10,s+10;0,s+5,s+5,0];
 env = polyshape(point_env(1,:), point_env(2,:));
 
 %% RENDEZVOUS
-REND = true;
+REND = false;
 
 target_pos = [round(s/5); round(s/2)];
 target_dim = 0.4;

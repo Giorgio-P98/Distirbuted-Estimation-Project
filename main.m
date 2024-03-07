@@ -17,10 +17,12 @@ all_obs = union(P);
 env_w_obs = subtract(env,all_obs);
 tot_area = area(env_w_obs);
 
-%% grid map for explored %
- 
-[X,Y] = meshgrid(0:grid_s:s+10,0:grid_s:s+10);
+%% Grid Map for exploration calculus
+
+[X,Y] = meshgrid(2:grid_s:s+8,2:grid_s:s+8);
 default_map = {X Y ones(size(X))};
+map_for_plot = {X Y phi_max.*ones(size(X))};
+
 ind_obs = inpolygon(default_map{1},default_map{2},all_obs.Vertices(:,1),all_obs.Vertices(:,2));
 default_map{3}(ind_obs) = 0;
 def_map_sum = sum(default_map{3},'all');
@@ -82,12 +84,14 @@ while(explored < 0.95)
     end
     if want_plot && mod(i,plot_step) == 0
         % Environment with bots plot init
+        % map_for_plot{3} = mapforplot(bots,n_r);
         figure(1)
         clf,hold on
         xlim([0 s+10])
         ylim([0 s+10])
+        % scatter(map_for_plot{1}(:), map_for_plot{2}(:), 40, map_for_plot{3}(:),'square','filled')
         iterate(bots,@plot_bot)
-        plot(all_obs,'FaceColor','black')
+        plot(all_obs,'FaceColor',[0.6 0.6 0.6],'FaceAlpha',1)
         plot_disk(target_pos(1),target_pos(2),target_dim);
         text(1,s+7,"sim time: "+string(t)+" [s]",'Color','white')
         drawnow
@@ -116,8 +120,8 @@ while(explored < 0.95)
         % bots(1).P
     end
     % "Until now" explored map
-    % explored = Howmuchexplored(bots, def_map_sum, phi_max);
-    explored = Howmuchexplored2(bots, n_r, def_map_sum, phi_max);
+    explored = Howmuchexplored(bots, def_map_sum, phi_max);
+    % explored = Howmuchexplored2(bots, n_r, def_map_sum, phi_max);
 
     clc
     disp('explored area: '+string(round(explored*100,2))+' %')
@@ -133,12 +137,13 @@ disp('Sim Elapsed time: '+string(t)+' [s]')
 toc
 
 %% vel plot
-% id_plot=5;
-% 
-% figure
-% plot(time_plot,bots(id_plot).vels(1,:).*3.6)
-% figure
-% plot(time_plot,bots(id_plot).vels(2,:).*60/(2*pi))
+id_plot=5;
+time_plot = (0:1:(length(bots(id_plot).vels)-1)).*0.1;
+
+figure
+plot(time_plot,bots(id_plot).vels(1,:).*3.6)
+figure
+plot(time_plot,bots(id_plot).vels(2,:).*60/(2*pi))
 
 %% Estimations plot
 % id_plot=4;
