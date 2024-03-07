@@ -54,7 +54,7 @@ for n_sim = 1:max_sim
         if mod(i,centroid_step) == 0
             iterate(bots,@mass_centroid);
         end
-        if want_plot && mod(i,200) == 0
+        if mod(i,200) == 0 || i == 6
             % Environment with bots plot init
             figure(1)
             clf,hold on

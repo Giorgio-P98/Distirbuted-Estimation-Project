@@ -137,75 +137,62 @@ disp('Sim Elapsed time: '+string(t)+' [s]')
 toc
 
 %% vel plot
-id_plot=5;
-time_plot = (0:1:(length(bots(id_plot).vels)-1)).*0.1;
-
-figure
-plot(time_plot,bots(id_plot).vels(1,:).*3.6)
-figure
-plot(time_plot,bots(id_plot).vels(2,:).*60/(2*pi))
-
-%% Estimations plot
-% id_plot=4;
-% 
+% id_plot=5;
 % time_plot = (0:1:(length(bots(id_plot).vels)-1)).*0.1;
 % 
-% error = bots(id_plot).estim{1} - bots(id_plot).estim{2};
-% std=[];
-% for i=1:3:length(bots(id_plot).estim{3})
-%     std = [std,[sqrt(bots(id_plot).estim{3}(1,i));sqrt(bots(id_plot).estim{3}(2,i+1));sqrt(bots(id_plot).estim{3}(3,i+2))]];
-% end
-% 
-% var_label = {'e_x [m]','e_y [m]','e_{\theta} [rad]'};
-% titoli = {'x estimation error', 'y estimation error', '\theta estimation error'};
-% figure(2)
-% for i=1:3
-%     subplot(3,1,i)
-%     plot(time_plot,error(i,:))
-%     title(titoli{i})
-%     xlabel('time [s]')
-%     ylabel(var_label{i})
-% end
-% 
-% figure(3)
-% hold on
-% subplot(2,1,1)
-% plot(time_plot,std(1:2,:))
-% title('Standard deviation of the estimated position x-y')
-% legend('\sigma_x','\sigma_y')
-% xlabel('time [s]')
-% ylabel('\sigma [m]')
-% subplot(2,1,2)
-% plot(time_plot,std(3,:))
-% title('Standard deviation of the estimated orientation \theta')
-% legend('\sigma_{\theta}')
-% xlabel('time [s]')
-% ylabel('\sigma [rad]')
-% hold off
-% 
-% figure(4)
-% hold on 
-% grid on
-% axis equal
-% xlim([0 s+10])
-% ylim([0 s+5])
-% title('Real and estimated position')
-% plot(bots(id_plot).estim{1}(1,:),bots(id_plot).estim{1}(2,:))
-% plot(bots(id_plot).estim{2}(1,:),bots(id_plot).estim{2}(2,:))
-% plot(all_obs,'FaceColor','black')
-% legend('real','estimated')
+% figure
+% plot(time_plot,bots(id_plot).vels(1,:).*3.6)
+% figure
+% plot(time_plot,bots(id_plot).vels(2,:).*60/(2*pi))
 
-% 79.429617
-% 94.146914
+%% Estimations plot
+id_plot=4;
 
-%% PLOT MESH MAP MEAS
-% 
-% figure(2), clf
-% plot(explored_set)
-% 
-% figure(3), clf
-% surf(bots(1).mesh_map_meas{1}, bots(1).mesh_map_meas{2}, bots(1).mesh_map_meas{3}, bots(1).mesh_map_meas{3})
-% 
-% figure(4), clf
-% surf(default_map{1}, default_map{2}, default_map{3}, default_map{3})
+time_plot = (0:1:(length(bots(id_plot).vels)-1)).*0.1;
 
+error = bots(id_plot).estim{1} - bots(id_plot).estim{2};
+std=[];
+for i=1:3:length(bots(id_plot).estim{3})
+    std = [std,[sqrt(bots(id_plot).estim{3}(1,i));sqrt(bots(id_plot).estim{3}(2,i+1));sqrt(bots(id_plot).estim{3}(3,i+2))]];
+end
+
+var_label = {'e_x [m]','e_y [m]','e_{\theta} [rad]'};
+titoli = {'x estimation error', 'y estimation error', '\theta estimation error'};
+figure(2)
+for i=1:3
+    subplot(3,1,i)
+    plot(time_plot,error(i,:))
+    title(titoli{i})
+    xlabel('$time [s]$','Interpreter','latex')
+    ylabel(var_label{i})
+end
+
+figure(3)
+hold on
+subplot(2,1,1)
+plot(time_plot,std(1:2,:))
+title('Standard deviation of the estimated position x-y')
+legend('$\sigma_x$','$\sigma_y$','Interpreter','latex')
+xlabel('$time [s]$','Interpreter','latex')
+ylabel('$\sigma [m]$','Interpreter','latex')
+subplot(2,1,2)
+plot(time_plot,std(3,:))
+title('Standard deviation of the estimated orientation \theta')
+legend('$\sigma_{\theta}$','Interpreter','latex')
+xlabel('$time [s]$','Interpreter','latex')
+ylabel('$\sigma [rad]$','Interpreter','latex')
+hold off
+
+figure(4)
+hold on 
+grid on
+axis equal
+xlim([0 s+10])
+ylim([0 s+5])
+title('Real and estimated position')
+plot(bots(id_plot).estim{1}(1,:),bots(id_plot).estim{1}(2,:))
+plot(bots(id_plot).estim{2}(1,:),bots(id_plot).estim{2}(2,:))
+plot(all_obs,'FaceColor','black')
+xlabel('$x [m]$','Interpreter','latex')
+ylabel('$y [m]$','Interpreter','latex')
+legend('real','estimated')
