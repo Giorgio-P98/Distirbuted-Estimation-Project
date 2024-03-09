@@ -25,17 +25,15 @@ sum_rend_distance = zeros(max_sim,length(t_vec));
 for n_sim = 1:max_sim
     for j=1:n_r
         bots(j) = DiffBot(dt,s,rs,Rr,j,defined_pose,robot_init, ...
-            union(P),gps_n,model_n,mag_n,gains_ddr,grid_s,phi_max, ...
-            n_verts,target_pos,ki,rho_i_init,rho_iD,u_clip,w_clip, ...
-            lidar_rad_std,conc_th);
+                union(P),gps_n,model_n,mag_n,lidar_n,P_init,gains_ddr, ...
+                grid_s,phi_max,n_verts,target_pos,ki,conc_th,MC_int_N);
     end
     
     % Algoritm initialization
     iterate(bots,@uncertainty);
     bots=update_neighbours(bots, all_obs);
-    bots=update_obstacles(all_obs,bots,n_lidar,n_pointxm_meas);
-    iterate(bots,@vertex_unc2);
-    iterate(bots,@qt_qtnosi_update);
+    bots=update_obstacles(all_obs,bots,n_lidar,n_pointxm);
+    iterate(bots,@vertex_unc);
     iterate(bots,@update_phi)
     iterate(bots,@mass_centroid);
 
@@ -44,16 +42,11 @@ for n_sim = 1:max_sim
         iterate(bots,@control_and_estimate);
         iterate(bots,@uncertainty);
         bots=update_neighbours(bots, all_obs);
-        bots=update_obstacles(all_obs,bots,n_lidar,n_pointxm_meas);
-        iterate(bots,@vertex_unc2);
-        warning('off')
-        iterate(bots,@qt_qtnosi_update);
-        warning('on')
+        bots=update_obstacles(all_obs,bots,n_lidar,n_pointxm);
+        iterate(bots,@vertex_unc);
         iterate(bots,@update_phi);
-        
-        if mod(i,centroid_step) == 0
-            iterate(bots,@mass_centroid);
-        end
+        iterate(bots,@mass_centroid);
+
         if mod(i,200) == 0 || i == 6
             % Environment with bots plot init
             figure(1)

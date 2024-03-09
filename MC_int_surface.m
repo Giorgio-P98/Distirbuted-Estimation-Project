@@ -1,5 +1,4 @@
-function [mass,cx,cy] = MC_int_surface(int_size,point_in,vertex,f)
-    samples = 2000;
+function [cx,cy] = MC_int_surface(int_size,samples,point_in,vertex,f)
     xq = int_size.* rand(samples,1)+point_in(1,1)-int_size/2;
     yq = int_size.* rand(samples,1)+point_in(2,1)-int_size/2;
     [in,on] = inpolygon(xq,yq,vertex(1,:),vertex(2,:));

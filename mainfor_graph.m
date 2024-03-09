@@ -44,41 +44,27 @@ for n_r = min_bot:max_bot
     for n_sim = 1:max_sim
         for j=1:n_r
             bots(j) = DiffBot(dt,s,rs,Rr,j,defined_pose,robot_init, ...
-                union(P),gps_n,model_n,mag_n,gains_ddr,grid_s,phi_max, ...
-                n_verts,target_pos,ki,rho_i_init,rho_iD,u_clip,w_clip, ...
-                lidar_rad_std,conc_th);
+                union(P),gps_n,model_n,mag_n,lidar_n,P_init,gains_ddr, ...
+                grid_s,phi_max,n_verts,target_pos,ki,conc_th,MC_int_N);
         end
         
         % Algoritm initialization
         iterate(bots,@uncertainty);
         bots=update_neighbours(bots, all_obs);
-        bots=update_obstacles(all_obs,bots,n_lidar,n_pointxm_meas);
-        iterate(bots,@vertex_unc2);
-        iterate(bots,@qt_qtnosi_update);
-        iterate(bots,@update_phi)
+        bots=update_obstacles(all_obs,bots,n_lidar,n_pointxm);
+        iterate(bots,@vertex_unc);
+        iterate(bots,@exploration)
         iterate(bots,@mass_centroid);
     
         while(explored < explor_limit && t<t_lim)
-            if REND
-                iterate(bots,@check_object_presence);
-            end
             iterate(bots,@control_and_estimate);
             iterate(bots,@uncertainty);
             bots=update_neighbours(bots, all_obs);
-            bots=update_obstacles(all_obs,bots,n_lidar,n_pointxm_meas);
-            iterate(bots,@vertex_unc2);
-            warning('off')
-            iterate(bots,@qt_qtnosi_update);
-            warning('on')
-            if REND
-                iterate(bots,@update_phi);
-            else
-                iterate(bots,@exploration);
-            end
-            if mod(i,centroid_step) == 0
-                iterate(bots,@mass_centroid);
-            end
-
+            bots=update_obstacles(all_obs,bots,n_lidar,n_pointxm);
+            iterate(bots,@vertex_unc);
+            iterate(bots,@exploration);
+            iterate(bots,@mass_centroid);
+            
             % Save plot of simulation intants
             if mod(i,101) == 0 || i == 6
                 % Environment with bots plot init
@@ -143,13 +129,12 @@ for n_r = min_bot:max_bot
         i = 1;
         t = 0;
         explored = 0;
-        explored_set = polyshape();
     end    
 end
 toc
 
 %% SAVE THE DATA
-save('7bot_08phi_max.mat')
+% save('7bot_08phi_max.mat')
 
 
 %% DATA ELABORATION

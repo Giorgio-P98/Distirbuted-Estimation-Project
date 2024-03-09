@@ -1,14 +1,6 @@
 function updated_obstacles = update_obstacles(obstacles,bots,n_ray,n_pointxm)
 for i=1:length(bots)
-    bots(i).obst=[];
     
-    % for j =1:length(obstacles)
-    %     for k=1:length(obstacles{j})
-    %         if norm(bots(i).pos - obstacles{j}(:,k)) <= bots(i).Rs
-    %             bots(i).obst(:,end+1) = obstacles{j}(:,k);
-    %         end
-    %     end
-    % end
     see_square_pt = [bots(i).pos(1:2) + bots(i).Rs, bots(i).pos(1:2) + [bots(i).Rs;-bots(i).Rs], ...
               bots(i).pos(1:2) - bots(i).Rs, bots(i).pos(1:2) + [-bots(i).Rs;+bots(i).Rs]];
     see_square = polyshape(see_square_pt(1,:),see_square_pt(2,:));
