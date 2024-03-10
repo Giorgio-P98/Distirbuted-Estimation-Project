@@ -130,19 +130,27 @@ disp('explored area 2: '+string(round(explored2*100,2))+' %')
 disp('Sim Elapsed time: '+string(t)+' [s]')
 toc
 
-%% vel plot
-% id_plot=5;
-% time_plot = (0:1:(length(bots(id_plot).vels)-1)).*0.1;
-% 
-% figure
-% plot(time_plot,bots(id_plot).vels(1,:).*3.6)
-% figure
-% plot(time_plot,bots(id_plot).vels(2,:).*60/(2*pi))
+%% PLOT VARS
 
-%% Estimations plot
+% Choose the agents from which all the following plots are generated
 id_plot=4;
-
+% Vector of time instants
 time_plot = (0:1:(length(bots(id_plot).vels)-1)).*0.1;
+
+%% VELOCITY PLOTS
+
+% Plot of axial and radial velcity v,w
+figure(2), clf, hold on
+subplot(2,1,1)
+plot(time_plot,bots(id_plot).vels(1,:))
+xlabel('$time [s]$','Interpreter','latex')
+ylabel('$v [\frac{m}{s}]$','Interpreter','latex')
+subplot(2,1,2)
+plot(time_plot,bots(id_plot).vels(2,:))
+xlabel('$time [s]$','Interpreter','latex')
+ylabel('$w [\frac{rad}{s}]$','Interpreter','latex')
+
+%% ESTIMATIONS PLOT
 
 error = bots(id_plot).estim{1} - bots(id_plot).estim{2};
 std=[];
@@ -150,9 +158,10 @@ for i=1:3:length(bots(id_plot).estim{3})
     std = [std,[sqrt(bots(id_plot).estim{3}(1,i));sqrt(bots(id_plot).estim{3}(2,i+1));sqrt(bots(id_plot).estim{3}(3,i+2))]];
 end
 
+% Plot of the estimation errors (x,y,theta) in time
 var_label = {'e_x [m]','e_y [m]','e_{\theta} [rad]'};
 titoli = {'x estimation error', 'y estimation error', '\theta estimation error'};
-figure(2)
+figure(3)
 for i=1:3
     subplot(3,1,i)
     plot(time_plot,error(i,:))
@@ -161,7 +170,8 @@ for i=1:3
     ylabel(var_label{i})
 end
 
-figure(3)
+% Plot of the standard deviations (x-y, theta) in time
+figure(4)
 hold on
 subplot(2,1,1)
 plot(time_plot,std(1:2,:))
@@ -177,7 +187,8 @@ xlabel('$time [s]$','Interpreter','latex')
 ylabel('$\sigma [rad]$','Interpreter','latex')
 hold off
 
-figure(4)
+% Plot of the real and of the estimated agent position in time
+figure(5)
 hold on 
 grid on
 axis equal

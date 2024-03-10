@@ -1,13 +1,15 @@
 function index_conv = convex_verts(vertex, conc_th)
 % Given the vertex of a polygon, determine the non convex vertex 
+
 % Inputs 
 % vertex = array with all the vertex coordinate
 
 % Output 
 %  index_conv = a index vector of all the non convex vertex
 
-% Our polygons are convex iff all the angles directions are negative. All
-% the vertex that do not satisfy this (i.e. if det([v1;v2]) > 0) are convex
+% Our polygons are convex iff all the angles directions are positive. All
+% the vertex that do not satisfy this (i.e. if det([v1;v2]) < 0) are
+% concave
 px = vertex(1,:); 
 py = vertex(2,:);
 l = length(px);
@@ -20,6 +22,7 @@ if det([v1; v2]) < conc_th
     index_conv(end+1) = 1;
 end
 
+% Go for the others
 for k = 2:l-1
     v1 = v2;
     v2 = [px(k+1) - px(k), py(k+1) - py(k)]; 
@@ -27,7 +30,8 @@ for k = 2:l-1
         index_conv(end+1) = k;
     end
 end
-% check the last vectors
+
+% check the last vectors couple
 v1 = v2;
 v2 = [px(1) - px(end), py(1) - py(end)];
 if det([v1; v2]) < 0

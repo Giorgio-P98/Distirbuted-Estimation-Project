@@ -1,27 +1,11 @@
 function obst = build_obst(points,points_per_m)
+% Given a set of vertices of an obstacle (points), upsamp with a given 
+% number of point per meter (points_per_m)
+
+% Output 
+% obst = upsampled obstacle
     obstx=[];
     obsty=[];
-%     for i=1:length(points)
-%         if i+1 <= length(points)
-%             obstx=[obstx,points(1,i):points_per_m_inv:points(1,i+1)];
-%             if obstx(end) ~= points(1,i+1)
-%                obstx(end+1) = points(1,i+1);
-%             end
-%             obsty=[obsty,points(2,i):points_per_m_inv:points(2,i+1)];
-%             if obsty(end) ~= points(2,i+1)
-%                obsty(end+1) = points(2,i+1);
-%             end
-%         else
-%             obstx=[obstx,points(1,i):points_per_m_inv:points(1,1)];
-%             if obstx(end) ~= points(1,1)
-%                obstx(end+1) = points(1,1);
-%             end
-%             obsty=[obsty,points(2,i):points_per_m_inv:points(2,1)];
-%             if obsty(end) ~= points(2,1)
-%                obsty(end+1) = points(2,1);
-%             end
-%         end
-%     end
     for i=1:length(points)
         if i+1 <= length(points)
             n_steps = int32(norm(points(:,i)-points(:,i+1))*points_per_m);

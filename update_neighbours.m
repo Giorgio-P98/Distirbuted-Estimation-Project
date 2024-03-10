@@ -1,10 +1,12 @@
 function updated_bots = update_neighbours(bots,obstacles)
+% Update all the knowledge about the neighbours (the ones in line of sight
+% at time t)
 for i=1:length(bots)
+    % Create the "line of sight" as a triangle with a very thin triangle
+    % polyshape obj. centered in the two true pos of the agents
     ib_pt = [0.01, -0.01]+bots(i).pos;
     bots(i).neighbours=[];
     bots(i).neighbours_unc=[];
-    % r_c = 3*bots(i).Rs;
-    % prev_agent_d = 0;
     for j=1:length(bots)
         if ne(i,j)
             jb_pt = bots(j).pos;
@@ -12,16 +14,17 @@ for i=1:length(bots)
             line = polyshape(l_point(1,:), l_point(2,:));
             inter = intersect(obstacles,line);
             bots(i).mesh_map_meas{3} = min(bots(i).mesh_map_meas{3}, bots(j).mesh_map_meas{3});
+            % if the triangle does not intersect any obstacle then the j
+            % agent can communicate with the i one
             if isempty(inter.Vertices)
                 bots(i).neighbours(:,end+1) = bots(j).pos_est;
-                % agent_d = norm(bots(i).pos - bots(j).pos);
                 bots(i).neighbours_unc(end+1) = bots(j).uncertainty_calc;
 
-                if bots(i).rendezvous_yes == false %&& agent_d <= r_c
+                if bots(i).rendezvous_yes == false
                     bots(i).mesh_map{3} = min(bots(i).mesh_map{3}, bots(j).mesh_map{3});
                 end
 
-                %% UNCOMMENT FOR RENDEZVOUS
+                %% FOR RENDEZVOUS
                 if bots(j).discover_target == true
                     bots(i).rendezvous_pt = bots(j).rendezvous_pt;
                     bots(i).target_pt = bots(j).target_pt;

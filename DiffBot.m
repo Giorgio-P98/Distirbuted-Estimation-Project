@@ -1,6 +1,6 @@
 classdef DiffBot < handle
     properties
-        pos                         % real agent position
+        pos                         % real agetn position
         pos_est                     % estimated agent position
         neighbours = []             % neighbours position
         neighbours_unc = []         % neighbours uncertainty

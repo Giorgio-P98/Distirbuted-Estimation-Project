@@ -1,4 +1,5 @@
 function obst_polar=cartesian2polar(vec,pos)
+% From cartesian to polar coordinate of point w.r.t to the agent pos
 if ~isempty(vec)
     obst_polar(1,:) = vecnorm(vec-pos);
     tmp = atan2(vec(2,:)-pos(2,1),vec(1,:)-pos(1,1));

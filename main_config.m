@@ -68,7 +68,7 @@ point_env = [0,0,s+10,s+10;0,s+5,s+5,0];
 env = polyshape(point_env(1,:), point_env(2,:));
 
 %% RENDEZVOUS
-REND = true;
+REND = false;
 
 target_pos = [round(s/5); round(s/2)];
 target_dim = 0.4;
