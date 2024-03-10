@@ -34,10 +34,7 @@ function res = regr_scan(scan,pos,epsilon)
             idx=[idx,i];
         end
     end
-    res = res(idx);   
-
-    % check the first and last sets of point resulting from the splitting
-    % to see if they are the same line, and if it is merge them
+    res = res(idx);    
     if length(res)>1
         if norm(res{1}(:,1)-res{end}(:,end)) < 0.2 
             verticality1 = std(res{1}(2,:))/std(res{1}(1,:));
@@ -78,7 +75,7 @@ function [res,flag]= DouglasPecker(p_list,epsilon)
         line_par(2) = 1e-5;
     end
     for i=2:length(p_list)-1
-        % calculate orthogonal distance of all the points respect the line fitted
+        % calculate distance of all the points respect the line fitted
         % through the first and last point of the set
         d=abs(line_par(1)*p_list(1,i)+line_par(2)*p_list(2,i)+line_par(3))/sqrt(line_par(1)^2+line_par(2)^2);
         if (d>dmax)

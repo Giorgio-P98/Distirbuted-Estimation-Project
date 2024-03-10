@@ -1,6 +1,12 @@
+% function that inflate the obstacles of the required amount 
+
 function [res0,res_infl] = inflate(scan,dist,pos)
     res0=[];
+    % threshold to consider a fitted line vertical
     verticality_th = 10;
+    % for all the sets of point passed to inflate and previously obtained
+    % with regr_scan, find the m and q of the lines that better fits the points
+    % through linear regression
     for i=1:length(scan)
         verticality(i) = std(scan{i}(2,:))/std(scan{i}(1,:));
         if verticality(i)>verticality_th
@@ -11,6 +17,7 @@ function [res0,res_infl] = inflate(scan,dist,pos)
     end
     
 
+    % for all the sets find the angles between the position of the agent and the perpendicular to the fitted lines  
     for i=1:length(scan)
         m_perp = -1/m{i}(2);
         q_perp = pos(2) - pos(1)*m_perp;
@@ -31,6 +38,8 @@ function [res0,res_infl] = inflate(scan,dist,pos)
         
     end
     
+    % find which sets are adjacent and will need an "artificial" corner
+    % after the inflate
     adjacency = [];
     for i=1:length(scan)
         if i < length(scan)
@@ -47,6 +56,7 @@ function [res0,res_infl] = inflate(scan,dist,pos)
             end
         end
     end
+    % move the lines toward the agent of the wanted amount 
     for i =1:length(scan)
         if verticality(i)>verticality_th
             scan{i} = [ones(1,200).*mean(scan{i}(1,:));...
@@ -62,6 +72,9 @@ function [res0,res_infl] = inflate(scan,dist,pos)
 
     end
     res0 = horzcat(res0{:});
+
+    % find the intersections of the inflated lines with adjacency and
+    % conjoint them
     for i = 1:length(scan)-1
         if adjacency(i)
             
