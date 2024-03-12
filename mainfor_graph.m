@@ -160,14 +160,14 @@ mean_explor_t(1)=210;
 
 figure(1), clf, hold on,
 for j=min_bot:max_bot
-    plot(t_vec, explored_area_time{j}(med_idx(j),:))
+    plot(t_vec, explored_area_time{j}(med_idx(j),:));
 end
-
+yline(95,'Color','r','LineStyle','--')
 legend_nbot = n_bots_legend(min_bot:max_bot);
 legend(legend_nbot, Location='southeast')
 ylabel('$\% EA$','Interpreter','latex')
 xlabel('$time [s]$','Interpreter','latex')
-yline(95,'Color','r','LineStyle','--')
+
 pbaspect([2 1 1])
 hold off
 

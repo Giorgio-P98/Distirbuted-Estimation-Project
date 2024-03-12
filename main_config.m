@@ -10,7 +10,7 @@ environment = 1;        % 1,2,3 for different environments (4 no obstacles)
 %% SIMULATION INIT
 t=0;                    % time t [s] init
 i=0;                    % i var init for plot only at certain step
-sim_t = 100;             % simulation time [s]
+sim_t = 100;            % simulation time [s]
 dt = 0.1;               % time step [s]
 n_r = 5;                % Number of Agents
 rs = 4.0;               % Maximum Lidar measurements range

@@ -211,8 +211,8 @@ classdef DiffBot < handle
         % sets plot)
         function plot_bot(obj)
             text(obj.pos_est(1),obj.pos_est(2),string(obj.id))
-            plot([obj.verts_unc(1,:),obj.verts_unc(1,1)],[obj.verts_unc(2,:),obj.verts_unc(2,1)],"LineWidth",1.1,"Color",'k');
-            plot([obj.verts_zi(1,:),obj.verts_zi(1,1)],[obj.verts_zi(2,:),obj.verts_zi(2,1)],"LineWidth",1.0,"Color",'b')
+            plot([obj.verts_unc(1,:),obj.verts_unc(1,1)],[obj.verts_unc(2,:),obj.verts_unc(2,1)],"LineWidth",1.0,"Color",'k');
+            % plot([obj.verts_zi(1,:),obj.verts_zi(1,1)],[obj.verts_zi(2,:),obj.verts_zi(2,1)],"LineWidth",1.0,"Color",'b')
             % plot([obj.verts_meas(1,:),obj.verts_meas(1,1)],[obj.verts_meas(2,:),obj.verts_meas(2,1)],"LineWidth",1.3,"Color",'b')
             plot_unc(obj)
             plot_disk(obj.pos(1),obj.pos(2),obj.bot_dim);
